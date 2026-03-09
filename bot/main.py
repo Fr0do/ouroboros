@@ -123,8 +123,20 @@ async def post_init(app: Application):
     ])
 
 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """Global error handler — log and notify user instead of silent failure."""
+    logger.error("Unhandled exception:", exc_info=context.error)
+    if isinstance(update, Update) and update.message:
+        msg = str(context.error)[:200]
+        try:
+            await update.message.reply_text(f"Error: `{msg}`", parse_mode="Markdown")
+        except Exception:
+            pass
+
+
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).post_init(post_init).build()
+    app.add_error_handler(error_handler)
 
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("help", start_handler))

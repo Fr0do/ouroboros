@@ -27,10 +27,13 @@ async def update_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if proc.returncode != 0:
-        await update.message.reply_text(f"Pull failed:\n```\n{stderr.decode().strip()}\n```", parse_mode="Markdown")
+        err = stderr.decode().strip()[:3000]
+        await update.message.reply_text(f"Pull failed:\n```\n{err}\n```", parse_mode="Markdown")
         return
 
-    await update.message.reply_text(f"Pulled:\n```\n{out}\n```\nRestarting...", parse_mode="Markdown")
+    # Truncate to just the summary (file list can be huge)
+    summary = out[:2000] if len(out) > 2000 else out
+    await update.message.reply_text(f"Pulled:\n```\n{summary}\n```\nRestarting...", parse_mode="Markdown")
 
     # Re-exec the bot process to pick up new code
     os.execv(sys.executable, [sys.executable, "-m", "bot"])
