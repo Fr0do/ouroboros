@@ -77,7 +77,8 @@ async def ssh_tmux_dump(host: str, session: str, history_lines: int = 5000,
         escaped_path = save_path.replace("'", "'\\''")
         await ssh_exec(
             host,
-            f"mkdir -p $(dirname '{escaped_path}') && cat > '{escaped_path}' << 'CRASHLOG_EOF'\n{text}\nCRASHLOG_EOF",
+            f"mkdir -p $(dirname '{escaped_path}') && "
+            f"cat > '{escaped_path}' << 'CRASHLOG_EOF'\n{text}\nCRASHLOG_EOF",
             timeout=15,
         )
 
@@ -88,12 +89,14 @@ async def gpu_status(host: str) -> str:
     """Get compact GPU report: name, util, mem, temp, power, and top processes."""
     gpu_info = await ssh_exec(
         host,
-        "nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit --format=csv,noheader,nounits",
+        "nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total,"
+        "temperature.gpu,power.draw,power.limit --format=csv,noheader,nounits",
         timeout=10,
     )
     procs = await ssh_exec(
         host,
-        "nvidia-smi --query-compute-apps=gpu_uuid,pid,used_memory,name --format=csv,noheader,nounits 2>/dev/null || echo ''",
+        "nvidia-smi --query-compute-apps=gpu_uuid,pid,used_memory,name"
+        " --format=csv,noheader,nounits 2>/dev/null || echo ''",
         timeout=10,
     )
     # Map GPU UUIDs to indices for process listing
@@ -118,7 +121,9 @@ async def gpu_status(host: str) -> str:
         # Shorten name (e.g. "NVIDIA A100-SXM4-80GB" -> "A100-80GB")
         short = name.replace("NVIDIA ", "").replace("-SXM4", "").replace("-SXM", "").replace("-PCIe", "")
         mem_pct = int(float(mem_used) / float(mem_total) * 100) if float(mem_total) > 0 else 0
-        lines.append(f"[{idx}] {short}  {util}% | {mem_used}/{mem_total}MB ({mem_pct}%) | {temp}°C | {pwr}/{pwr_lim}W")
+        lines.append(
+            f"[{idx}] {short}  {util}% | {mem_used}/{mem_total}MB ({mem_pct}%) | {temp}\u00b0C | {pwr}/{pwr_lim}W"
+        )
 
     if procs and procs.strip():
         lines.append("")

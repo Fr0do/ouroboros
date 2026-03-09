@@ -1,36 +1,23 @@
-# Team — Multi-Agent Orchestration
+# Team — Multi-Agent Coordination
 
-Lightweight file-based coordination for parallel Claude Code terminals.
+Native Claude Code agent teams are the primary method for multi-agent work.
 
-## How it works
+Docs: https://code.claude.com/docs/en/agent-teams
 
-```
-User (Telegram / CLI)
-  │
-  ▼
-Leader (terminal 0)          ← reads OUROBOROS.md, plans work, writes tasks
-  ├── Worker 1 (terminal 1)  ← picks up task, works, writes result
-  ├── Worker 2 (terminal 2)
-  └── Worker N (terminal N)
-```
+## Filesystem fallback
 
-- **Leader** decomposes work into task files in `team/tasks/`
-- **Workers** claim tasks, execute, write results to `team/results/`
-- **Sync** happens through the filesystem — no server, no sockets
-- **Telegram bot** provides oversight via `/team` command
+When native agent teams are unavailable (e.g. offline, SSH-only environments),
+the file-based task queue in `team/tasks/` can still be used:
 
-## Task lifecycle
+- Write task YAML files to `team/tasks/` (one per task)
+- Workers claim tasks, execute, write results to `team/results/`
+- Lifecycle: `pending -> claimed -> done | failed`
 
-```
-pending → claimed → done | failed
-```
+This is a fallback — prefer native teams when possible.
 
-## Files
+## Directory layout
 
 | Path | Purpose |
 |---|---|
-| `team/config.yaml` | Team size, roles, project assignments |
-| `team/tasks/*.yaml` | Task queue (one file per task) |
+| `team/tasks/*.yaml` | File-based task queue (fallback) |
 | `team/results/*.md` | Completed work artifacts |
-| `team/LEADER.md` | Instructions for the leader terminal |
-| `team/WORKER.md` | Instructions for worker terminals |

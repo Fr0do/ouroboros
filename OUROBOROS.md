@@ -68,7 +68,7 @@
 - Run `rtk gain` to see analytics
 
 ### GitHub CI
-- **Bot lint** — on push to `main`, `py_compile` all bot modules
+- **Lint** — on push to `main` and PRs, ruff via pre-commit
 - **Release automation** — on tag push `v*`, auto-create GitHub release with changelog
 - **Upstream sync** — daily ff of `ouroboros-stable` from `razzant/ouroboros:main`
 - **Remote health ping** — daily SSH-ping to kurkin-1, Telegram alert on failure
@@ -181,9 +181,6 @@ Ouroboros (root page)
 - **#13** s_cot: run curriculum GRPO training sweep
 - **#14** s_cot: ablation experiments (spectral on/off, curriculum, conciseness)
 - **#15** s_cot paper: finalize results + theoretical analysis
-- ~~**#16** bot: code hygiene pass~~ → done (auth decorator, lint cleanup)
-- ~~**#17** CI: upstream sync + health ping~~ → done (upstream-sync.yml, health-ping.yml)
-- ~~**#18** team: integrate multi-agent workflow~~ → done (/team command, task queue)
 
 ## Version
 - v6.28.5 — 2026-03-09 — Team mode operational: /team bot command, task queue, workers completed auth+CI+lint

@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from ..services.config import PROJECTS
 from ..services.ssh import ssh_exec
-from ..services.tg import require_project
+from ..services.tg import require_project, send_long
 
 
 async def ckpt_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -27,13 +27,7 @@ async def ckpt_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not output.strip():
         output = "No checkpoints found."
 
-    if len(output) > 3900:
-        output = output[-3900:]
-
-    await update.message.reply_text(
-        f"*{name}* checkpoints:\n```\n{output}\n```",
-        parse_mode="Markdown",
-    )
+    await send_long(update, f"*{name}* checkpoints:\n```\n{output}\n```", parse_mode="Markdown")
 
 
 handler = CommandHandler("ckpt", ckpt_handler)

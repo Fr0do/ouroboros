@@ -1,32 +1,37 @@
 id: "003"
-status: claimed
-title: "CI: remote health ping workflow"
+status: pending
+title: "Bot handler tests — command handlers"
 project: ouroboros
 priority: normal
 context: |
-  GitHub issue #17 — implement upstream sync + remote health ping.
+  Write pytest tests for bot command handlers (building on the test infra from task 001).
 
-  Task 2 of 2: Create .github/workflows/health-ping.yml
-  Schedule: daily. SSH-ping kurkin-1, alert via Telegram on failure.
+  Files to test:
+  - bot/handlers/team.py — test /team (empty queue, with tasks), /team <id>, /team reset <id>
+  - bot/handlers/disk.py — test /disk routing (default, scan, me subcommands)
 
-  Approach: Use a self-hosted runner on kurkin-1, OR use a GitHub-hosted runner
-  with an SSH action. Since we may not have self-hosted, use the SSH approach:
+  These handlers call services, so mock the service layer:
+  - For team handler: mock load_tasks, load_task, save_task
+  - For disk handler: mock refresh_df, refresh_dua, refresh_my_usage, format_report, format_my_report
 
-  - uses: appleboy/ssh-action (or similar) to run `echo OK` on kurkin-1
-  - On failure: send Telegram message via curl to bot API
+  Create a shared fixture in conftest.py for a mock Update object with:
+  - update.message.reply_text = AsyncMock
+  - update.effective_user.id = 12345
 
-  Secrets needed: SSH_KEY, SSH_HOST, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
-  (these will be configured as repo secrets separately).
+  Create a shared fixture for mock context with:
+  - context.args = [...]
 
-  Read existing workflows in .github/workflows/ for style reference.
+  Files to create:
+  - tests/test_handler_team.py
+  - tests/test_handler_disk.py
 
   Acceptance:
-  - Workflow file created and valid YAML
-  - Runs daily + manual dispatch
-  - Sends Telegram alert on SSH failure
-depends_on: []
-assigned_to: null
-created: "2026-03-09T22:00:00"
-claimed_by: 3
+  - All tests pass with: python -m pytest tests/ -v
+  - At least 3 tests per handler module
+  - Handlers are tested for main code paths (happy path + error cases)
+depends_on: ["001"]
+assigned_to: 1
+created: "2026-03-09T14:00:00"
+claimed_by: null
 completed: null
 result_file: null

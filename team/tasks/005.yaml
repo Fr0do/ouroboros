@@ -1,37 +1,42 @@
 id: "005"
 status: pending
-title: "s_cot: prepare training launch script for curriculum sweep"
-project: s_cot
-priority: high
+title: "Team stale-claim detection + auto-report"
+project: ouroboros
+priority: normal
 context: |
-  GitHub issue #13 — run curriculum GRPO training sweep.
+  Add stale claim detection to the team service and a Telegram watchdog.
 
-  Task: Review the current training config on kurkin-1 and prepare a sweep
-  script that varies curriculum difficulty ratios.
+  Per team/config.yaml, claim_stale_minutes=10. A task is stale if:
+  - status == "claimed"
+  - It has been claimed for longer than claim_stale_minutes
+  - We track this by adding a "claimed_at" timestamp when status changes to "claimed"
 
-  Remote path: /workspace-SR004.nfs2/kurkin/s_cot
-  Key files to read:
-  - train.py (or train.sh) — current training entrypoint
-  - fsdp2.yaml — accelerate config
-  - Any dataset config files
+  Implementation:
+  1. In bot/services/team.py:
+     - Add get_stale_tasks(stale_minutes=10) -> list[dict]: returns tasks that are claimed but stale
+     - Load config from team/config.yaml to get claim_stale_minutes
+     - For each claimed task, check if "claimed_at" field exists and is older than threshold
+     - Workers should set "claimed_at" when claiming (update WORKER.md to mention this)
 
-  Current curriculum: 25% medium, 35% hard, 40% expert
-  Sweep variants to prepare:
-  1. Baseline: 100% medium (easiest)
-  2. Current: 25/35/40 med/hard/expert
-  3. Hard-heavy: 10/60/30 med/hard/expert
-  4. Expert-only: 0/0/100 expert
+  2. In bot/handlers/team.py:
+     - Add /team stale subcommand: shows stale tasks with how long they've been stuck
+     - In the default /team list view, mark stale tasks with a ⚠️ icon
 
-  Output: A sweep.sh script (or set of config files) ready to be run.
-  Do NOT launch training — just prepare the configs.
+  3. In team/WORKER.md:
+     - Add instruction: when claiming a task, also set claimed_at to current ISO timestamp
+
+  Files to modify:
+  - bot/services/team.py
+  - bot/handlers/team.py
+  - team/WORKER.md
 
   Acceptance:
-  - Sweep script with 4 config variants
-  - Each variant has a clear run name for ClearML tracking
-  - Compatible with existing accelerate launch setup
-depends_on: []
+  - /team stale shows stale tasks (or "No stale tasks")
+  - Stale tasks show ⚠️ in /team list
+  - WORKER.md updated with claimed_at instruction
+depends_on: ["001"]
 assigned_to: 1
-created: "2026-03-09T22:00:00"
+created: "2026-03-09T14:00:00"
 claimed_by: null
 completed: null
 result_file: null

@@ -2,9 +2,10 @@ import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from ..services.config import PROJECTS
-from ..services.tg import require_project
+from ..services.tg import authorized, require_project
 
 
+@authorized
 async def sync_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/sync <project> [subpath] — rsync results from remote to local."""
     name, err = require_project(context.args or [], "/sync <project> [subpath]")
@@ -41,7 +42,10 @@ async def sync_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     out = stdout.decode().strip()
-    summary_lines = [line for line in out.split("\n") if line.startswith("sent ") or line.startswith("total ") or "speedup" in line]
+    summary_lines = [
+        line for line in out.split("\n")
+        if line.startswith("sent ") or line.startswith("total ") or "speedup" in line
+    ]
     summary = "\n".join(summary_lines[-3:]) if summary_lines else out[-500:]
 
     if proc.returncode != 0:

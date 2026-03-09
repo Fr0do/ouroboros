@@ -10,29 +10,31 @@
 
 ---
 
-**v6.28.3 (τ)** — 2026-03-09
+**v6.28.5** — 2026-03-09
 
 ## What It Does
 
 Ouroboros is the coordination layer for autonomous research across multiple projects, machines, and AI agents. It provides:
 
 - **Telegram bot** — remote control panel for training runs, GPU/disk monitoring, log tailing, and crash alerts (`bot/`)
-- **Multi-agent orchestration** — file-based task queue for parallel Claude Code terminals (`team/`)
+- **Multi-agent orchestration** — native Claude Code agent teams + filesystem fallback (`team/`)
 - **Research protocol** — project registry, workflow conventions, cross-project syncing (`OUROBOROS.md`)
 
 ## Active Projects
 
 | Codename | Description | Status |
 |---|---|---|
-| **s_cot** | Spectral-R1: latent energy-based GRPO reasoning (NeurIPS 2025) | Training + paper |
-| **long-vqa** | MMReD: cross-modal dense context reasoning benchmark | Eval ongoing |
-| **bbbo** | Bayesian black-box optimization framework | Active dev |
+| **s_cot** | Spectral-R1: latent energy-based GRPO reasoning (NeurIPS 2025) | Training + paper writing |
+| **long-vqa** | MMReD: cross-modal dense context reasoning benchmark | Benchmark complete, eval ongoing |
+| **bbbo** | Bayesian black-box optimization framework | Active development |
+| **ouroboros** | This meta-project: governance, Telegram bot, multi-agent coordination | Bootstrapping |
 
 ## Infrastructure
 
 - **Compute**: kurkin-1 / kurkin-4 (shared NFS, FSDP2, vLLM)
 - **Tracking**: ClearML, Notion, Telegram alerts
 - **Token efficiency**: RTK (Rust Token Killer) — 60–90% savings on CLI ops
+- **CI**: Pre-commit + ruff linting, release automation, upstream sync, health ping
 
 ## Setup
 
