@@ -17,6 +17,7 @@ from .handlers.sync import handler as sync_handler
 from .handlers.metrics import handler as metrics_handler
 from .handlers.completions import handler as completions_handler
 from .handlers.crashlog import handler as crashlog_handler
+from .handlers.team import handler as team_handler
 
 LOG_FILE = "bot.log"
 logging.basicConfig(
@@ -59,6 +60,10 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"*Notes*\n"
         f"/note _project_ _text_ — log to Notion\n"
         f"/task _text_ — add to backlog\n\n"
+        f"*Team*\n"
+        f"/team — task queue overview\n"
+        f"/team _id_ — task details\n"
+        f"/team reset _id_ — reset stuck task\n\n"
         f"*System*\n"
         f"/crashlog _project_ — dump tmux scrollback on crash\n"
         f"/update — git pull \\+ restart\n"
@@ -105,6 +110,7 @@ async def post_init(app: Application):
         BotCommand("metrics", "Training metrics summary"),
         BotCommand("completions", "Analyse GRPO completions"),
         BotCommand("crashlog", "Dump tmux scrollback for debugging"),
+        BotCommand("team", "Multi-agent task queue"),
     ])
 
 
@@ -127,6 +133,7 @@ def main():
     app.add_handler(metrics_handler)
     app.add_handler(completions_handler)
     app.add_handler(crashlog_handler)
+    app.add_handler(team_handler)
 
     logger.info("OuroSSS bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

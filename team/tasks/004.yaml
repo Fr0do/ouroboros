@@ -1,0 +1,34 @@
+id: "004"
+status: pending
+title: "Bot hygiene: consolidate ssh helpers"
+project: ouroboros
+priority: low
+context: |
+  GitHub issue #16 — bot code hygiene pass.
+
+  Task: Review bot/services/ssh.py and bot/handlers/ for any duplicated SSH
+  patterns. If handlers are doing raw SSH calls instead of going through
+  the ssh service, refactor them to use the service.
+
+  Also check if any handler does its own tmux parsing that could be a shared
+  helper in ssh.py.
+
+  Read these files:
+  - bot/services/ssh.py
+  - bot/handlers/run.py
+  - bot/handlers/stop.py
+  - bot/handlers/logs.py
+  - bot/handlers/crashlog.py
+  - bot/handlers/ckpt.py
+  - bot/handlers/metrics.py
+
+  Acceptance:
+  - No duplicated SSH/tmux logic across handlers
+  - Any extracted helpers added to bot/services/ssh.py
+  - All existing tests still pass (there may not be tests — that's fine)
+depends_on: ["001"]
+assigned_to: null
+created: "2026-03-09T22:00:00"
+claimed_by: null
+completed: null
+result_file: null

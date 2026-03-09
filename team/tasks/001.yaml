@@ -1,0 +1,34 @@
+id: "001"
+status: pending
+title: "Bot hygiene: extract shared auth decorator"
+project: ouroboros
+priority: normal
+context: |
+  GitHub issue #16 — bot code hygiene pass.
+
+  Task: Create a reusable @authorized decorator in bot/services/tg.py that checks
+  AUTHORIZED_USERS and returns early if unauthorized. Currently each handler that
+  needs auth does it manually (or doesn't). Pattern:
+
+    from ..services.config import AUTHORIZED_USERS
+
+    def authorized(func):
+        async def wrapper(update, context):
+            if AUTHORIZED_USERS and update.effective_user.id not in AUTHORIZED_USERS:
+                return
+            return await func(update, context)
+        return wrapper
+
+  Apply it to handlers that need auth protection. Read bot/handlers/*.py first
+  to see which handlers exist and which need the decorator.
+
+  Acceptance:
+  - Decorator defined in bot/services/tg.py
+  - Applied to at least the sensitive handlers (run, stop, update)
+  - Existing behavior unchanged
+depends_on: []
+assigned_to: null
+created: "2026-03-09T22:00:00"
+claimed_by: null
+completed: null
+result_file: null

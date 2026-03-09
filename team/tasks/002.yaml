@@ -1,0 +1,32 @@
+id: "002"
+status: pending
+title: "CI: upstream sync workflow"
+project: ouroboros
+priority: normal
+context: |
+  GitHub issue #17 — implement upstream sync + remote health ping.
+
+  Task 1 of 2: Create .github/workflows/upstream-sync.yml
+  Schedule: daily (cron). Fast-forward merge ouroboros-stable from razzant/ouroboros:main.
+
+  Pattern:
+  - uses: actions/checkout with fetch-depth: 0
+  - git fetch upstream main
+  - git checkout ouroboros-stable
+  - git merge --ff-only upstream/main
+  - git push origin ouroboros-stable
+
+  If ff-only fails, open an issue instead of force-merging.
+
+  Read existing workflows in .github/workflows/ to follow the same style.
+
+  Acceptance:
+  - Workflow file created and valid YAML
+  - Runs on schedule (daily) and manual dispatch
+  - Only ff merges, never force
+depends_on: []
+assigned_to: null
+created: "2026-03-09T22:00:00"
+claimed_by: null
+completed: null
+result_file: null

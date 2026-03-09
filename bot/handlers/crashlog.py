@@ -72,7 +72,7 @@ async def crashlog_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_long(update, f"```\n{crash_context}\n```", parse_mode="Markdown")
 
     if has_traceback:
-        error_lines = [l for l in crash_context.splitlines() if re.match(r"^\w*(Error|Exception|Fault)", l)]
+        error_lines = [line for line in crash_context.splitlines() if re.match(r"^\w*(Error|Exception|Fault)", line)]
         if error_lines:
             await update.message.reply_text(f"Error: `{error_lines[-1]}`", parse_mode="Markdown")
 

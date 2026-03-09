@@ -1,0 +1,37 @@
+id: "005"
+status: pending
+title: "s_cot: prepare training launch script for curriculum sweep"
+project: s_cot
+priority: high
+context: |
+  GitHub issue #13 — run curriculum GRPO training sweep.
+
+  Task: Review the current training config on kurkin-1 and prepare a sweep
+  script that varies curriculum difficulty ratios.
+
+  Remote path: /workspace-SR004.nfs2/kurkin/s_cot
+  Key files to read:
+  - train.py (or train.sh) — current training entrypoint
+  - fsdp2.yaml — accelerate config
+  - Any dataset config files
+
+  Current curriculum: 25% medium, 35% hard, 40% expert
+  Sweep variants to prepare:
+  1. Baseline: 100% medium (easiest)
+  2. Current: 25/35/40 med/hard/expert
+  3. Hard-heavy: 10/60/30 med/hard/expert
+  4. Expert-only: 0/0/100 expert
+
+  Output: A sweep.sh script (or set of config files) ready to be run.
+  Do NOT launch training — just prepare the configs.
+
+  Acceptance:
+  - Sweep script with 4 config variants
+  - Each variant has a clear run name for ClearML tracking
+  - Compatible with existing accelerate launch setup
+depends_on: []
+assigned_to: 1
+created: "2026-03-09T22:00:00"
+claimed_by: null
+completed: null
+result_file: null

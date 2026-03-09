@@ -1,0 +1,32 @@
+id: "003"
+status: pending
+title: "CI: remote health ping workflow"
+project: ouroboros
+priority: normal
+context: |
+  GitHub issue #17 — implement upstream sync + remote health ping.
+
+  Task 2 of 2: Create .github/workflows/health-ping.yml
+  Schedule: daily. SSH-ping kurkin-1, alert via Telegram on failure.
+
+  Approach: Use a self-hosted runner on kurkin-1, OR use a GitHub-hosted runner
+  with an SSH action. Since we may not have self-hosted, use the SSH approach:
+
+  - uses: appleboy/ssh-action (or similar) to run `echo OK` on kurkin-1
+  - On failure: send Telegram message via curl to bot API
+
+  Secrets needed: SSH_KEY, SSH_HOST, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+  (these will be configured as repo secrets separately).
+
+  Read existing workflows in .github/workflows/ for style reference.
+
+  Acceptance:
+  - Workflow file created and valid YAML
+  - Runs daily + manual dispatch
+  - Sends Telegram alert on SSH failure
+depends_on: []
+assigned_to: null
+created: "2026-03-09T22:00:00"
+claimed_by: null
+completed: null
+result_file: null
