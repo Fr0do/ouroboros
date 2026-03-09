@@ -19,6 +19,7 @@ from .handlers.completions import handler as completions_handler
 from .handlers.crashlog import handler as crashlog_handler
 from .handlers.team import handler as team_handler
 from .handlers.vitals import handler as vitals_handler
+from .handlers.feature import handler as feature_handler
 
 LOG_FILE = "bot.log"
 logging.basicConfig(
@@ -68,6 +69,8 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"*Health*\n"
         f"/vitals — project health dashboard \\(chart\\)\n"
         f"/vitals text — text\\-only summary\n\n"
+        f"*Development*\n"
+        f"/feature _description_ — file GitHub issue from chat\n\n"
         f"*System*\n"
         f"/crashlog _project_ — dump tmux scrollback on crash\n"
         f"/update — git pull \\+ restart\n"
@@ -116,6 +119,7 @@ async def post_init(app: Application):
         BotCommand("crashlog", "Dump tmux scrollback for debugging"),
         BotCommand("team", "Multi-agent task queue"),
         BotCommand("vitals", "Project health dashboard"),
+        BotCommand("feature", "File a feature request"),
     ])
 
 
@@ -140,6 +144,7 @@ def main():
     app.add_handler(crashlog_handler)
     app.add_handler(team_handler)
     app.add_handler(vitals_handler)
+    app.add_handler(feature_handler)
 
     logger.info("OuroSSS bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
