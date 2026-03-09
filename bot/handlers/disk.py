@@ -9,7 +9,7 @@ from ..services.disk_state import (
 
 logger = logging.getLogger("ouroboros")
 
-CHECK_INTERVAL_SECONDS = 3600  # hourly
+CHECK_INTERVAL_SECONDS = 21600  # every 6 hours
 
 
 async def disk_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
