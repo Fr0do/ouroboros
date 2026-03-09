@@ -24,6 +24,15 @@
 5. **Results analysis**: accuracy trend, spectral energy correlation with correctness, reasoning length distribution
 6. **Paper finalization**: results tables, figures (gen_viz.py), theoretical analysis section, conclusion
 7. **Submission**: NeurIPS 2025 deadline
+
+#### s_cot Technical State
+- **Model**: LiquidAI/LFM2.5-1.2B-Thinking (hidden=2048, 16 layers)
+- **Architecture**: Lfm2Spectral class (`lfm2_spectral.py`) with RayleighConjugateDescent
+- **Training**: GRPO with spectral + accuracy + format rewards, vLLM colocate mode, FSDP2
+- **Dataset v3**: adjacency list format, 3–6 nodes, single-letter names, forced 2+ hops
+- **Trainer v2**: strong conciseness rewards (+0.3 <200chars, −0.3 >1000), max_completion_length=512
+- **Completions**: saved as parquets in `spectral-r1-checkpoints/fixed/completions/`
+
 | **long-vqa** | `~/experiments/long-vqa` + `kurkin-1:/workspace-SR004.nfs2/kurkin/long-vqa` | MMReD: cross-modal dense context reasoning benchmark. MERA integration. | Benchmark complete, eval ongoing |
 | **bbbo** | `kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer` | Bayesian black-box optimization framework | Active development |
 | **ouroboros** | `~/experiments/ouroboros` | This meta-project: governance, Telegram bot, Notion integration | Bootstrapping |
@@ -38,10 +47,17 @@
 - **Shared NFS**: `/workspace-SR004.nfs2/kurkin/` (visible from both)
 - **Conda env**: `kurkin_313_torch` (Python 3.13, PyTorch, TRL, vLLM, etc.)
 - **HF cache**: `/workspace-SR004.nfs2/.cache/huggingface`
+- **Conda envs**: `/workspace-SR004.nfs2/kurkin/envs/` (shared across hosts)
+- **Direct python**: `/workspace-SR004.nfs2/kurkin/envs/kurkin_313_torch/bin/python`
+- **Training launch**: `accelerate launch --config_file fsdp2.yaml train.py`
+
+#### Gotchas
+- No nvcc on compute nodes — set `DS_BUILD_OPS=0` to prevent DeepSpeed build errors
+- Conda activation in tmux is broken — use direct python/accelerate paths instead
 
 ### Services
 - **Notion** (notes/knowledge base): Integration ID in `.env`
-- **Telegram** (fast control panel): Bot token stored in `ouroboros/.env`
+- **Telegram** (fast control panel): Bot runs on kurkin-1, needs `LOCAL_HOSTNAME=kurkin-1` in `.env`. `/update` command does git pull + restart from Telegram
 - **ClearML** (experiment tracking): project=s_cot, auto-logged from training scripts
 - **GitLab** (ai.cloud.ru): Source hosting for remote projects
 
@@ -52,18 +68,10 @@
 - Run `rtk gain` to see analytics
 
 ### GitHub CI
-Active:
 - **Bot lint** — on push to `main`, `py_compile` all bot modules
-- **Release automation** — on tag push `v*`, auto-create GitHub release with changelog from commits
-
-Planned:
-- **Upstream sync** — scheduled ff of `ouroboros-stable` from `razzant/ouroboros:main`
-- **Remote health ping** — scheduled SSH-ping to kurkin-1, Telegram alert on failure
-
-### Code Hygiene (planned)
-- Extract `_send_long()` into shared `bot/services/tg.py` — deduplicate message truncation across 5+ handlers
-- Extract DUA output parser in `disk_state.py` — identical logic in two functions
-- Handler boilerplate — deduplicate project-arg validation across all handlers
+- **Release automation** — on tag push `v*`, auto-create GitHub release with changelog
+- **Upstream sync** — daily ff of `ouroboros-stable` from `razzant/ouroboros:main`
+- **Remote health ping** — daily SSH-ping to kurkin-1, Telegram alert on failure
 
 ---
 
@@ -131,6 +139,21 @@ Ouroboros (root page)
 
 ---
 
+## Agent Conventions
+
+### Git Workflow
+- **Default: commit & push** for routine changes — no confirmation needed
+- **PR + Telegram notify** only for major changes requiring review
+- Don't edit local s_cot — update remote via scp or provide filenames
+- Don't auto-run training — let user debug and launch
+
+### Design Style
+- **Apple-minimalist**: white/transparent backgrounds, clean lines, generous whitespace
+- Applies to paper figures, TikZ diagrams, visual abstracts, any generated visuals
+- No dark themes for paper/print artifacts — dark is for terminal UIs only
+
+---
+
 ## Principles
 
 1. **Autonomy with accountability** — agents work independently but log everything
@@ -138,7 +161,8 @@ Ouroboros (root page)
 3. **Reproducibility** — every experiment has a config, seed, and commit hash
 4. **Cross-pollination** — projects share insights, not just code
 5. **The loop closes** — OUROBOROS.md itself gets updated as the process improves
-6. **Atomic updates** — every file change is a self-contained, non-breaking commit. No partial edits that leave the repo broken. This enables safe parallel work by sibling agents (team mode or concurrent terminals)
+6. **Atomic updates** — every file change is a self-contained, non-breaking commit
+7. **Minimalism** — single source of truth for every concept; no semantic duplicates in code or docs; delete over deprecate; every file earns its place
 
 ---
 
