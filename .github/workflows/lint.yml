@@ -27,6 +27,6 @@ jobs:
 
       - name: Compile-check top-level scripts
         run: |
-          for f in notion_bootstrap.py notion_client_lib.py; do
+          for f in notion_bootstrap.py; do
             [ -f "$f" ] && python -m py_compile "$f"
           done
