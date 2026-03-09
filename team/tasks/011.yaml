@@ -1,0 +1,101 @@
+id: "011"
+status: pending
+title: "Vital stats — data collection, charts, /vitals Telegram command"
+project: ouroboros
+priority: normal
+context: |
+  Build a "vital stats" dashboard that tracks the evolution of the ouroboros agent system.
+  Two new files: bot/services/vitals.py (data collection) and bot/handlers/vitals.py (Telegram UI).
+
+  ## Data sources (all local, no SSH needed)
+
+  1. **Git activity** — parse `git log` for the ouroboros repo:
+     - Commits per day (last 30 days)
+     - Lines added/removed per day
+     - Unique authors
+  2. **Team tasks** — read team/tasks/*.yaml:
+     - Total / pending / claimed / done / failed counts
+     - Completion rate (done / total)
+     - Average time-to-complete for done tasks (created → completed timestamps)
+  3. **Codebase size** — count Python files and LOC:
+     - Total .py files, total lines
+     - Bot module size (bot/**/*.py)
+     - Test coverage file count (tests/*.py)
+  4. **GitHub issues** — via `gh issue list`:
+     - Open / closed counts
+  5. **Project age** — days since first commit
+
+  ## bot/services/vitals.py
+
+  Functions to implement:
+  - `git_activity(days=30) -> dict` — returns {dates: [...], commits: [...], insertions: [...], deletions: [...]}
+    Use: `git log --since="30 days ago" --format="%ad" --date=short --numstat`
+  - `team_stats() -> dict` — returns {total, pending, claimed, done, failed, completion_rate, avg_completion_hours}
+    Reuse load_tasks() from bot/services/team.py
+  - `codebase_stats() -> dict` — returns {py_files, total_loc, bot_files, bot_loc, test_files}
+    Use pathlib glob, count lines
+  - `github_stats() -> dict` — returns {open_issues, closed_issues}
+    Use: `gh issue list --state all --json state --limit 200`
+  - `collect_vitals() -> dict` — calls all above, returns combined dict with timestamp
+
+  ## Charts (matplotlib, saved as PNG to /tmp)
+
+  - `render_vitals_chart(vitals: dict) -> Path`:
+    Create a 2x2 subplot figure (figsize 10x8, white background, clean style):
+    1. Top-left: commits per day bar chart (last 30d)
+    2. Top-right: lines added (green) vs deleted (red) stacked area
+    3. Bottom-left: team task donut chart (done/pending/claimed/failed)
+    4. Bottom-right: text summary card with key numbers:
+       - Project age, total commits, codebase LOC
+       - Team completion rate, open issues
+    Use matplotlib with a clean, minimal style. Save to /tmp/vitals.png.
+
+  ## bot/handlers/vitals.py
+
+  Telegram command handler:
+  - `/vitals` — collect stats, render chart, send photo + text summary
+  - `/vitals text` — text-only summary (no chart)
+
+  Handler structure (follow existing patterns like metrics.py):
+  ```python
+  from telegram import Update
+  from telegram.ext import ContextTypes, CommandHandler
+  from ..services.vitals import collect_vitals, render_vitals_chart
+  from ..services.tg import authorized
+
+  @authorized
+  async def vitals_handler(update, context):
+      mode = (context.args or ["chart"])[0]
+      vitals = collect_vitals()
+      if mode == "text":
+          # send text summary
+      else:
+          chart_path = render_vitals_chart(vitals)
+          await update.message.reply_photo(photo=open(chart_path, "rb"), caption=summary)
+
+  handler = CommandHandler("vitals", vitals_handler)
+  ```
+
+  ## Registration in bot/main.py
+
+  - Import handler from bot.handlers.vitals
+  - Add to app.add_handler()
+  - Add BotCommand("vitals", "Agent evolution dashboard") to post_init
+  - Add /vitals to the /start help text under a new "Analytics" section
+
+  ## Dependencies
+
+  - Add matplotlib to bot/requirements.txt if not already there
+
+  Acceptance:
+  - `/vitals` sends a 2x2 chart PNG + text caption with key stats
+  - `/vitals text` sends text-only summary
+  - All data collected from local sources (git, filesystem, gh CLI)
+  - Chart uses clean white background, minimal style (Apple-aesthetic)
+  - No crashes on empty data (0 commits, 0 tasks, etc.)
+depends_on: []
+assigned_to: 1
+created: "2026-03-09T18:00:00"
+claimed_by: null
+completed: null
+result_file: null
