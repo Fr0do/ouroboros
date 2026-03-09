@@ -186,13 +186,10 @@ Ouroboros (root page)
 ---
 
 ## Active Task Backlog (GitHub Issues)
-- **#13** s_cot: run curriculum GRPO training sweep
-- **#14** s_cot: ablation experiments (spectral on/off, curriculum, conciseness)
-- **#15** s_cot paper: finalize results + theoretical analysis
+All current issues resolved. Check `gh issue list --state open` for latest.
 
 ## Version
 - v6.29.0 — 2026-03-09 — /completions baseline, /feature→GH issues, /vitals, issue journaling, disk 6h timeout
-- v6.28.5 — 2026-03-09 — Team mode operational: /team bot command, task queue, workers completed auth+CI+lint
 - v6.28.4 — 2026-03-09 — Deep research (22 refs), curriculum dataset, RCD refactor, crashlog, task backlog
 - v6.28.3 (τ) — 2026-03-09 — Telegram bot, GRPO completions, research governance
 - v0.1.0 — 2026-03-08 — Initial bootstrap via Cowork
