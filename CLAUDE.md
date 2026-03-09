@@ -3,17 +3,8 @@
 ## What Is This
 Root governance project for all of Max's research. Contains:
 - **OUROBOROS.md** — research meta-protocol (project registry, workflow, principles)
-- **PLAN.md** — executable agent plan (run this phase by phase)
 - **bot/** — Telegram control panel for autonomous agent oversight
-- **notion_bootstrap.py** — Notion workspace initializer
-- **notion_client_lib.py** — shared Notion helpers
-
-## Quick Start
-```bash
-# First run:
-cat PLAN.md  # read the full plan
-# Then execute Phase 0 → Phase 1 → ... sequentially
-```
+- **notion_bootstrap.py** — one-time Notion workspace initializer
 
 ## Environment
 - Local macOS: SSH access to kurkin-1, kurkin-4
@@ -33,12 +24,9 @@ Active via Claude Code hook. All shell ops auto-optimized.
 | File | Purpose |
 |---|---|
 | OUROBOROS.md | Global research governance — read first |
-| PLAN.md | Step-by-step agent execution plan |
 | .env | Secrets (gitignored) |
 | bot/main.py | Telegram bot entry point |
 | notion_bootstrap.py | One-time Notion workspace setup |
-| notion_client_lib.py | Shared Notion API helpers |
-| notion_pages.json | Auto-generated page ID mapping |
 
 ## Commit Conventions
 - Include a summary of major edits in commit messages (not just what changed in this repo)

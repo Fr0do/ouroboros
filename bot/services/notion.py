@@ -49,30 +49,6 @@ def add_note(project: str, text: str) -> str:
     return f"Note added to {project}"
 
 
-def log_experiment(project: str, config: dict, metrics: dict) -> str:
-    """Log an experiment run to a project's Notion page."""
-    pages = load_page_ids()
-    page_id = pages.get(project)
-    if not page_id:
-        return f"No Notion page for '{project}'."
-
-    client = get_client()
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    summary = f"[{now}] Config: {json.dumps(config, indent=None)} | Metrics: {json.dumps(metrics, indent=None)}"
-
-    client.blocks.children.append(
-        block_id=page_id,
-        children=[{
-            "object": "block",
-            "type": "callout",
-            "callout": {
-                "icon": {"type": "emoji", "emoji": "🧪"},
-                "rich_text": [{"type": "text", "text": {"content": summary}}]
-            }
-        }]
-    )
-    return f"Experiment logged to {project}"
-
 
 def add_to_backlog(text: str) -> str:
     """Add an item to the Ideas & Backlog page."""

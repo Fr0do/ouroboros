@@ -15,6 +15,7 @@ from .handlers.disk import handler as disk_handler, schedule_watchdog
 from .handlers.sync import handler as sync_handler
 from .handlers.metrics import handler as metrics_handler
 from .handlers.completions import handler as completions_handler
+from .handlers.crashlog import handler as crashlog_handler
 
 LOG_FILE = "bot.log"
 logging.basicConfig(
@@ -27,16 +28,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ouroboros")
 
-
-async def auth_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Check if user is authorized. If AUTHORIZED_USERS is empty, allow all (first-run mode)."""
-    if not AUTHORIZED_USERS:
-        return True
-    if update.effective_user and update.effective_user.id in AUTHORIZED_USERS:
-        return True
-    logger.warning(f"Unauthorized access attempt: {update.effective_user}")
-    await update.message.reply_text("Unauthorized. Add your user ID to .env AUTHORIZED_USERS.")
-    return False
 
 
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,6 +59,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"/note _project_ _text_ — log to Notion\n"
         f"/task _text_ — add to backlog\n\n"
         f"*System*\n"
+        f"/crashlog _project_ — dump tmux scrollback on crash\n"
         f"/update — git pull \\+ restart\n"
         f"/help — this message",
         parse_mode="MarkdownV2",
@@ -113,6 +105,7 @@ async def post_init(app: Application):
         BotCommand("sync", "Rsync results to local"),
         BotCommand("metrics", "Training metrics summary"),
         BotCommand("completions", "Analyse GRPO completions"),
+        BotCommand("crashlog", "Dump tmux scrollback for debugging"),
     ])
 
 
@@ -134,6 +127,7 @@ def main():
     app.add_handler(sync_handler)
     app.add_handler(metrics_handler)
     app.add_handler(completions_handler)
+    app.add_handler(crashlog_handler)
 
     logger.info("OuroSSS bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

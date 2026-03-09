@@ -42,6 +42,20 @@
 - 60–90% token savings on dev operations
 - Run `rtk gain` to see analytics
 
+### GitHub CI
+Active:
+- **Bot lint** — on push to `main`, `py_compile` all bot modules
+
+Planned:
+- **Release automation** — on tag push `v*`, auto-create GitHub release with changelog
+- **Upstream sync** — scheduled ff of `ouroboros-stable` from `razzant/ouroboros:main`
+- **Remote health ping** — scheduled SSH-ping to kurkin-1, Telegram alert on failure
+
+### Code Hygiene (planned)
+- Extract `_send_long()` into shared `bot/services/tg.py` — deduplicate message truncation across 5+ handlers
+- Extract DUA output parser in `disk_state.py` — identical logic in two functions
+- Handler boilerplate — deduplicate project-arg validation across all handlers
+
 ---
 
 ## Workflow Protocol
@@ -98,4 +112,5 @@ Ouroboros (root page)
 ---
 
 ## Version
+- v6.28.3 (τ) — 2026-03-09 — Telegram bot, GRPO completions, research governance
 - v0.1.0 — 2026-03-08 — Initial bootstrap via Cowork
