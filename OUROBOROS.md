@@ -151,6 +151,12 @@ Ouroboros (root page)
 - Trivial fixes (typos, one-liners) skip the issue — use judgment
 - Issue title: short and descriptive. Body: context, motivation, acceptance criteria when relevant
 
+### Issue Triage Routine
+- **At conversation start**: check `gh issue list --repo Fr0do/ouroboros --state open` for new issues
+- **Periodically during long sessions**: re-check for newly filed issues
+- Triage: read the issue, assess priority, either act on it or acknowledge and plan
+- If an issue is filed by the user while working — treat it as a task interrupt
+
 ### Git Workflow
 - **Default: commit & push** for routine changes — no confirmation needed
 - **PR + Telegram notify** only for major changes requiring review
