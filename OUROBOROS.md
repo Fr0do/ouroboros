@@ -1,0 +1,101 @@
+# OUROBOROS — Research Governance Protocol
+
+> The serpent eats its own tail: each project feeds the next, and the meta-process improves itself.
+
+## Identity
+
+**Owner**: Maxim Kurkin (maximbider@gmail.com)
+**Scope**: All active research projects — local machine + kurkin-1/kurkin-4 remotes
+**Interface layer**: Claude (Cowork for high-level, Code CLI for execution, Telegram bot for fast control)
+
+---
+
+## Active Projects
+
+| Codename | Location | Description | Status |
+|---|---|---|---|
+| **s_cot** | `kurkin-1:/workspace-SR004.nfs2/kurkin/s_cot` + `~/experiments/s_cot_tex` (paper) | Spectral-R1: latent energy-based GRPO reasoning. NeurIPS 2025. | Training + paper writing |
+| **long-vqa** | `~/experiments/long-vqa` + `kurkin-1:/workspace-SR004.nfs2/kurkin/long-vqa` | MMReD: cross-modal dense context reasoning benchmark. MERA integration. | Benchmark complete, eval ongoing |
+| **bbbo** | `kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer` | Bayesian black-box optimization framework | Active development |
+| **ouroboros** | `~/experiments/ouroboros` | This meta-project: governance, Telegram bot, Notion integration | Bootstrapping |
+
+---
+
+## Infrastructure
+
+### Compute
+- **kurkin-1**: `ssh kurkin-1` → `ssh-sr004-jupyter.ai.cloud.ru:2222` (workspace node)
+- **kurkin-4**: `ssh kurkin-4` → same host, different user (GPU node)
+- **Shared NFS**: `/workspace-SR004.nfs2/kurkin/` (visible from both)
+- **Conda env**: `kurkin_313_torch` (Python 3.13, PyTorch, TRL, vLLM, etc.)
+- **HF cache**: `/workspace-SR004.nfs2/.cache/huggingface`
+
+### Services
+- **Notion** (notes/knowledge base): Integration ID in `.env`
+- **Telegram** (fast control panel): Bot token stored in `ouroboros/.env`
+- **ClearML** (experiment tracking): project=s_cot, auto-logged from training scripts
+- **GitLab** (ai.cloud.ru): Source hosting for remote projects
+
+### Token Efficiency
+- **RTK** (Rust Token Killer) is installed globally for Claude Code CLI
+- All shell commands auto-proxied via hook: `git status` → `rtk git status`
+- 60–90% token savings on dev operations
+- Run `rtk gain` to see analytics
+
+---
+
+## Workflow Protocol
+
+### 1. Task Intake
+- **High-level direction**: Cowork mode (this interface) or Telegram `/task` command
+- **Execution**: Claude Code CLI on local or remote machines
+- **Quick control**: Telegram bot (`/status`, `/run`, `/stop`, `/logs`)
+
+### 2. Autonomous Agent Rules
+When Claude Code runs autonomously on a project:
+1. Read CLAUDE.md in the project root first (always)
+2. Read OUROBOROS.md for cross-project context
+3. **Plan with Opus, implement with Sonnet** — use Opus for design/architecture, delegate code writing to Sonnet subagents when feasible (skip if Opus limits are fine)
+4. Commit working state before any experiment
+5. Log all runs: name, config, key metrics
+6. Push notes to Notion (project page + daily log)
+7. Report completion / blockers to Telegram
+
+### 3. Cross-Project Syncing
+- s_cot training results → s_cot_tex paper (via scp or git)
+- long-vqa eval metrics → s_cot paper (comparison baselines)
+- bbbo optimizer → potential hyperparameter backend for s_cot/long-vqa
+- All project milestones → Notion research timeline
+
+### 4. Notion Structure
+```
+Ouroboros (root page)
+├── Research Timeline       # Weekly milestones, decisions, blockers
+├── s_cot                   # Training logs, metrics, paper drafts
+├── long-vqa (MMReD)        # Benchmark results, MERA submission status
+├── bbbo                    # Optimizer benchmarks, comparisons
+├── Ideas & Backlog         # Future directions, paper ideas
+└── Infrastructure          # Env configs, credentials (private), setup notes
+```
+
+### 5. Paper Pipeline
+1. Experiments run on remotes (kurkin-1/4)
+2. Results sync to local `~/experiments/<project>_tex/`
+3. LaTeX compiled locally (latexmk)
+4. PDF reviewed, iterated
+5. Camera-ready → submission
+
+---
+
+## Principles
+
+1. **Autonomy with accountability** — agents work independently but log everything
+2. **Minimal overhead** — RTK for tokens, Telegram for control, Notion for memory
+3. **Reproducibility** — every experiment has a config, seed, and commit hash
+4. **Cross-pollination** — projects share insights, not just code
+5. **The loop closes** — OUROBOROS.md itself gets updated as the process improves
+
+---
+
+## Version
+- v0.1.0 — 2026-03-08 — Initial bootstrap via Cowork

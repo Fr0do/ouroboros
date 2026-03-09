@@ -1,0 +1,32 @@
+name: Bot Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install minimal deps
+        run: pip install python-telegram-bot python-dotenv notion-client
+
+      - name: Compile-check all bot modules
+        run: |
+          find bot -name '*.py' | while read f; do
+            python -m py_compile "$f" || exit 1
+          done
+
+      - name: Compile-check top-level scripts
+        run: |
+          for f in notion_bootstrap.py notion_client_lib.py; do
+            [ -f "$f" ] && python -m py_compile "$f"
+          done
