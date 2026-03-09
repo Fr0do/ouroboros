@@ -82,26 +82,30 @@
 - **Execution**: Claude Code CLI on local or remote machines
 - **Quick control**: Telegram bot (`/status`, `/run`, `/stop`, `/logs`)
 
-### 2. Team Mode (multi-terminal)
+### 2. Team Mode (multi-agent)
 
-When the user runs multiple Claude Code terminals in parallel:
+**Native agent teams** (preferred): Claude Code has built-in experimental support for coordinated multi-agent work. Enable via settings:
 
-```
-Terminal 0: Leader (Opus)     — plans, decomposes, reviews, commits
-Terminal 1: Worker (Sonnet)   — implements task from team/tasks/
-Terminal 2: Worker (Sonnet)   — implements task from team/tasks/
-...
+```json
+// settings.json
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
 ```
 
-- **Config**: `team/config.yaml` — team_size, strategy, model assignments
-- **Leader instructions**: `team/LEADER.md` — reads context, writes task files, reviews results
-- **Worker instructions**: `team/WORKER.md` — claims tasks, executes, reports
-- **Task queue**: `team/tasks/*.yaml` — file-based, status: pending → claimed → done/failed
-- **Results**: `team/results/*.md` — one per completed task
+Architecture: one **team lead** coordinates, **teammates** work in parallel. Shared task list with auto-claiming, direct inter-agent messaging via mailbox, plan approval gates.
 
-The leader never implements directly. Workers never commit. Communication is through the filesystem — no server needed. Tasks must be self-contained with full context.
+Key practices:
+- **3–5 teammates** optimal; 5–6 tasks per teammate keeps everyone productive
+- **Avoid file conflicts** — each teammate owns different files
+- **Plan approval** for risky tasks: teammate plans in read-only mode, lead approves before implementation
+- **Subagents vs teams**: use subagents for focused tasks that only report back; use teams when agents need to discuss, challenge, and coordinate
+- Display modes: **in-process** (Shift+Down to cycle) or **split panes** (tmux/iTerm2)
+- Quality gates via hooks: `TeammateIdle` (keep working), `TaskCompleted` (block completion)
+- Cleanup: always via lead (`Clean up the team`), never from teammates
+- Limitations: no session resumption for in-process teammates, no nested teams, one team per session
 
-See `team/README.md` for details.
+Best use cases: research/review, parallel new modules, debugging with competing hypotheses, cross-layer coordination.
+
+**Filesystem fallback** (`team/`): for manual coordination when native teams aren't available. Uses `team/tasks/*.yaml` (pending→claimed→done) and `team/results/*.md`. See `team/README.md`.
 
 ### 3. Solo Mode (single terminal)
 When Claude Code runs autonomously on a project:
