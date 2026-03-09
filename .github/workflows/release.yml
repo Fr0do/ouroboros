@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for changelog
+
+      - name: Build changelog from commits since last tag
+        id: changelog
+        run: |
+          # Find the previous tag (if any)
+          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          echo "prev_tag=${PREV_TAG:-none}" >> "$GITHUB_OUTPUT"
+
+          # Generate changelog grouped by prefix
+          {
+            echo "## What's Changed"
+            echo ""
+
+            # Categorise commits by conventional prefix
+            git log "$RANGE" --pretty=format:"%s" | while IFS= read -r msg; do
+              case "$msg" in
+                feat:*|feat\(*) echo "- ✨ ${msg}" ;;
+                fix:*|fix\(*)   echo "- 🐛 ${msg}" ;;
+                refactor:*)     echo "- ♻️ ${msg}" ;;
+                docs:*)         echo "- 📝 ${msg}" ;;
+                *)              echo "- ${msg}" ;;
+              esac
+            done
+
+            echo ""
+            echo "**Full diff**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-$(git rev-list --max-parents=0 HEAD | head -1)}...${{ github.ref_name }}"
+          } > changelog.md
+
+          cat changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: changelog.md
+          generate_release_notes: false

@@ -15,6 +15,15 @@
 | Codename | Location | Description | Status |
 |---|---|---|---|
 | **s_cot** | `kurkin-1:/workspace-SR004.nfs2/kurkin/s_cot` + `~/experiments/s_cot_tex` (paper) | Spectral-R1: latent energy-based GRPO reasoning. NeurIPS 2025. | Training + paper writing |
+
+### s_cot Research Roadmap
+1. ~~Literature review: RL for reasoning, PRM, latent steering, spectral methods~~ (done — 22 refs)
+2. ~~Paper sections: abstract, introduction, related work, methodology~~ (drafted)
+3. **Curriculum training**: Run GRPO with v4 dataset (medium/hard/expert mix) on LFM2.5-1.2B-Thinking
+4. **Ablation experiments**: spectral reward on/off, curriculum vs flat difficulty, conciseness reward weight
+5. **Results analysis**: accuracy trend, spectral energy correlation with correctness, reasoning length distribution
+6. **Paper finalization**: results tables, figures (gen_viz.py), theoretical analysis section, conclusion
+7. **Submission**: NeurIPS 2025 deadline
 | **long-vqa** | `~/experiments/long-vqa` + `kurkin-1:/workspace-SR004.nfs2/kurkin/long-vqa` | MMReD: cross-modal dense context reasoning benchmark. MERA integration. | Benchmark complete, eval ongoing |
 | **bbbo** | `kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer` | Bayesian black-box optimization framework | Active development |
 | **ouroboros** | `~/experiments/ouroboros` | This meta-project: governance, Telegram bot, Notion integration | Bootstrapping |
@@ -45,9 +54,9 @@
 ### GitHub CI
 Active:
 - **Bot lint** — on push to `main`, `py_compile` all bot modules
+- **Release automation** — on tag push `v*`, auto-create GitHub release with changelog from commits
 
 Planned:
-- **Release automation** — on tag push `v*`, auto-create GitHub release with changelog
 - **Upstream sync** — scheduled ff of `ouroboros-stable` from `razzant/ouroboros:main`
 - **Remote health ping** — scheduled SSH-ping to kurkin-1, Telegram alert on failure
 
@@ -65,7 +74,28 @@ Planned:
 - **Execution**: Claude Code CLI on local or remote machines
 - **Quick control**: Telegram bot (`/status`, `/run`, `/stop`, `/logs`)
 
-### 2. Autonomous Agent Rules
+### 2. Team Mode (multi-terminal)
+
+When the user runs multiple Claude Code terminals in parallel:
+
+```
+Terminal 0: Leader (Opus)     — plans, decomposes, reviews, commits
+Terminal 1: Worker (Sonnet)   — implements task from team/tasks/
+Terminal 2: Worker (Sonnet)   — implements task from team/tasks/
+...
+```
+
+- **Config**: `team/config.yaml` — team_size, strategy, model assignments
+- **Leader instructions**: `team/LEADER.md` — reads context, writes task files, reviews results
+- **Worker instructions**: `team/WORKER.md` — claims tasks, executes, reports
+- **Task queue**: `team/tasks/*.yaml` — file-based, status: pending → claimed → done/failed
+- **Results**: `team/results/*.md` — one per completed task
+
+The leader never implements directly. Workers never commit. Communication is through the filesystem — no server needed. Tasks must be self-contained with full context.
+
+See `team/README.md` for details.
+
+### 3. Solo Mode (single terminal)
 When Claude Code runs autonomously on a project:
 1. Read CLAUDE.md in the project root first (always)
 2. Read OUROBOROS.md for cross-project context
@@ -75,13 +105,13 @@ When Claude Code runs autonomously on a project:
 6. Push notes to Notion (project page + daily log)
 7. Report completion / blockers to Telegram
 
-### 3. Cross-Project Syncing
+### 4. Cross-Project Syncing
 - s_cot training results → s_cot_tex paper (via scp or git)
 - long-vqa eval metrics → s_cot paper (comparison baselines)
 - bbbo optimizer → potential hyperparameter backend for s_cot/long-vqa
 - All project milestones → Notion research timeline
 
-### 4. Notion Structure
+### 5. Notion Structure
 ```
 Ouroboros (root page)
 ├── Research Timeline       # Weekly milestones, decisions, blockers
@@ -92,7 +122,7 @@ Ouroboros (root page)
 └── Infrastructure          # Env configs, credentials (private), setup notes
 ```
 
-### 5. Paper Pipeline
+### 6. Paper Pipeline
 1. Experiments run on remotes (kurkin-1/4)
 2. Results sync to local `~/experiments/<project>_tex/`
 3. LaTeX compiled locally (latexmk)
@@ -108,6 +138,7 @@ Ouroboros (root page)
 3. **Reproducibility** — every experiment has a config, seed, and commit hash
 4. **Cross-pollination** — projects share insights, not just code
 5. **The loop closes** — OUROBOROS.md itself gets updated as the process improves
+6. **Atomic updates** — every file change is a self-contained, non-breaking commit. No partial edits that leave the repo broken. This enables safe parallel work by sibling agents (team mode or concurrent terminals)
 
 ---
 

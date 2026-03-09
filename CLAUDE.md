@@ -4,6 +4,7 @@
 Root governance project for all of Max's research. Contains:
 - **OUROBOROS.md** — research meta-protocol (project registry, workflow, principles)
 - **bot/** — Telegram control panel for autonomous agent oversight
+- **team/** — multi-terminal agent orchestration (leader + workers)
 - **notion_bootstrap.py** — one-time Notion workspace initializer
 
 ## Environment
@@ -26,6 +27,11 @@ Active via Claude Code hook. All shell ops auto-optimized.
 | OUROBOROS.md | Global research governance — read first |
 | .env | Secrets (gitignored) |
 | bot/main.py | Telegram bot entry point |
+| team/config.yaml | Team size, roles, strategy |
+| team/LEADER.md | Leader agent instructions |
+| team/WORKER.md | Worker agent instructions |
+| team/tasks/*.yaml | File-based task queue |
+| team/results/*.md | Completed work artifacts |
 | notion_bootstrap.py | One-time Notion workspace setup |
 
 ## Commit Conventions

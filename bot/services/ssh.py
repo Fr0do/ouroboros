@@ -63,6 +63,29 @@ async def ssh_tmux_capture(host: str, session: str, lines: int = 20) -> str:
     )
 
 
+async def ssh_tmux_dump(host: str, session: str, history_lines: int = 5000,
+                        save_path: str | None = None) -> str:
+    """Capture full scrollback from tmux and optionally save to file on remote.
+
+    Returns the captured text (may be large).
+    """
+    # -S -N captures N lines of scrollback history
+    capture_cmd = f"tmux capture-pane -t {session} -p -S -{history_lines}"
+    text = await ssh_exec(host, capture_cmd, timeout=30)
+
+    if save_path and text.strip():
+        # Save on remote for persistent access
+        escaped_path = save_path.replace("'", "'\\''")
+        escaped_text = text.replace("'", "'\\''")
+        await ssh_exec(
+            host,
+            f"mkdir -p $(dirname '{escaped_path}') && cat > '{escaped_path}' << 'CRASHLOG_EOF'\n{text}\nCRASHLOG_EOF",
+            timeout=15,
+        )
+
+    return text
+
+
 async def gpu_status(host: str) -> str:
     """Get compact GPU report: name, util, mem, temp, power, and top processes."""
     gpu_info = await ssh_exec(
