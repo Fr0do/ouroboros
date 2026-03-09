@@ -1,5 +1,5 @@
 id: "003"
-status: pending
+status: claimed
 title: "CI: remote health ping workflow"
 project: ouroboros
 priority: normal
@@ -27,6 +27,6 @@ context: |
 depends_on: []
 assigned_to: null
 created: "2026-03-09T22:00:00"
-claimed_by: null
+claimed_by: 3
 completed: null
 result_file: null

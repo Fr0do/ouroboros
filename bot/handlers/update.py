@@ -5,6 +5,10 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 
 
+from ..services.tg import authorized
+
+
+@authorized
 async def update_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/update — git pull and restart the bot."""
     repo_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +23,7 @@ async def update_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     out = stdout.decode().strip()
 
     if "Already up to date" in out:
-        await update.message.reply_text(f"Already up to date.")
+        await update.message.reply_text("Already up to date.")
         return
 
     if proc.returncode != 0:

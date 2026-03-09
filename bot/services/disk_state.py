@@ -169,10 +169,10 @@ def format_report(state: dict) -> str:
     top_dirs = state.get("top_dirs")
     if top_dirs:
         dir_lines = [f"{e['size']:>10}  {e['path']}" for e in top_dirs[:20]]
-        lines.append(f"\n*Top directories:*\n```\n" + "\n".join(dir_lines) + "\n```")
+        lines.append("\n*Top directories:*\n```\n" + "\n".join(dir_lines) + "\n```")
         lines.append(f"_dua: {state.get('dua_updated', 'never')}_")
     else:
-        lines.append(f"\n_No dua scan yet. `/disk scan` to start._")
+        lines.append("\n_No dua scan yet. `/disk scan` to start._")
 
     return "\n".join(lines)
 
@@ -184,7 +184,7 @@ def format_my_report(state: dict) -> str:
     my_dirs = state.get("my_dirs")
     if my_dirs:
         dir_lines = [f"{e['size']:>10}  {e['path']}" for e in my_dirs[:15]]
-        lines.append(f"```\n" + "\n".join(dir_lines) + "\n```")
+        lines.append("```\n" + "\n".join(dir_lines) + "\n```")
         lines.append(f"_updated: {state.get('my_updated', 'never')}_")
     else:
         lines.append("_No scan yet. Running..._")

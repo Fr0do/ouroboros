@@ -37,7 +37,7 @@ async def metrics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not metric_lines:
         progress = re.compile(r"\d+[/|]\d+|\d+\.\d{2,}")
-        metric_lines = [l.strip() for l in raw.split("\n") if progress.search(l)]
+        metric_lines = [line.strip() for line in raw.split("\n") if progress.search(line)]
 
     if not metric_lines:
         await update.message.reply_text(

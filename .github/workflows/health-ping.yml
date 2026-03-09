@@ -1,39 +1,27 @@
-name: Remote Health Ping
+name: Health Ping
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # daily at 08:00 UTC
-  workflow_dispatch:
+    - cron: "0 5 * * *"  # daily at 05:00 UTC
+  workflow_dispatch:       # allow manual trigger
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: SSH ping kurkin-1
-        id: ssh
-        continue-on-error: true
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: echo OK
 
-          # Accept host key automatically
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=15 \
-              -o BatchMode=yes \
-              -p 2222 \
-              kurkin@ssh-sr004-jupyter.ai.cloud.ru \
-              "echo ok" 2>&1
-
-      - name: Telegram alert on failure
-        if: steps.ssh.outcome == 'failure'
+      - name: Alert on Telegram
+        if: failure()
         run: |
           curl -s -X POST \
             "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d parse_mode=Markdown \
-            -d text="⚠️ *Health Ping Failed*%0A%0Akurkin-1 is unreachable.%0AWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-      - name: Fail workflow if ping failed
-        if: steps.ssh.outcome == 'failure'
-        run: exit 1
+            -d text="kurkin-1 health ping failed — SSH unreachable"

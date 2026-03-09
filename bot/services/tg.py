@@ -1,5 +1,16 @@
+from functools import wraps
 from telegram import Update
-from ..services.config import PROJECTS
+from ..services.config import AUTHORIZED_USERS, PROJECTS
+
+
+def authorized(func):
+    """Decorator: silently ignore updates from users not in AUTHORIZED_USERS."""
+    @wraps(func)
+    async def wrapper(update, context):
+        if AUTHORIZED_USERS and update.effective_user.id not in AUTHORIZED_USERS:
+            return
+        return await func(update, context)
+    return wrapper
 
 
 async def send_long(update: Update, text: str, **kwargs):

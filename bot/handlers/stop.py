@@ -2,9 +2,10 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from ..services.config import PROJECTS
 from ..services.ssh import ssh_exec
-from ..services.tg import require_project
+from ..services.tg import authorized, require_project
 
 
+@authorized
 async def stop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/stop <project> — send Ctrl-C to project's tmux session."""
     name, err = require_project(context.args or [], "/stop <project>")

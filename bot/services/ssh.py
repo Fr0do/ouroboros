@@ -1,7 +1,6 @@
 import asyncio
 import os
 import socket
-from typing import Optional
 
 
 def _is_local(host: str) -> bool:
@@ -47,7 +46,7 @@ async def ssh_exec(host: str, command: str, timeout: int = 30) -> str:
 async def ssh_tmux_send(host: str, session: str, command: str) -> str:
     """Send keys to a tmux session on remote host. Creates session if needed."""
     # Ensure session exists
-    check = await ssh_exec(host, f"tmux has-session -t {session} 2>&1 || tmux new-session -d -s {session}")
+    await ssh_exec(host, f"tmux has-session -t {session} 2>&1 || tmux new-session -d -s {session}")
     # Send command
     escaped = command.replace('"', '\\"')
     result = await ssh_exec(host, f'tmux send-keys -t {session} "{escaped}" Enter')
@@ -76,7 +75,6 @@ async def ssh_tmux_dump(host: str, session: str, history_lines: int = 5000,
     if save_path and text.strip():
         # Save on remote for persistent access
         escaped_path = save_path.replace("'", "'\\''")
-        escaped_text = text.replace("'", "'\\''")
         await ssh_exec(
             host,
             f"mkdir -p $(dirname '{escaped_path}') && cat > '{escaped_path}' << 'CRASHLOG_EOF'\n{text}\nCRASHLOG_EOF",

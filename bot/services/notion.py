@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from datetime import datetime
 from notion_client import Client
 from .config import NOTION_SECRET, ROOT

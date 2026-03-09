@@ -1,34 +1,37 @@
 id: "001"
 status: pending
-title: "Bot hygiene: extract shared auth decorator"
+title: "Bot unit tests — services layer"
 project: ouroboros
-priority: normal
+priority: high
 context: |
-  GitHub issue #16 — bot code hygiene pass.
+  Write pytest unit tests for the bot services layer.
 
-  Task: Create a reusable @authorized decorator in bot/services/tg.py that checks
-  AUTHORIZED_USERS and returns early if unauthorized. Currently each handler that
-  needs auth does it manually (or doesn't). Pattern:
+  Files to test:
+  - bot/services/tg.py — test send_long (message splitting at 4000 chars, newline-aware splitting), require_project (valid/invalid/empty args)
+  - bot/services/team.py — test load_tasks, load_task, save_task, task_summary_line, format_task_detail
+  - bot/services/disk_state.py — test _parse_dua_output, load_state/save_state, format_report, format_my_report, _trend_line
 
-    from ..services.config import AUTHORIZED_USERS
+  Structure:
+  - Create tests/__init__.py
+  - Create tests/conftest.py with common fixtures (tmp_path for state files, sample task dicts)
+  - Create tests/test_tg.py
+  - Create tests/test_team.py
+  - Create tests/test_disk_state.py
 
-    def authorized(func):
-        async def wrapper(update, context):
-            if AUTHORIZED_USERS and update.effective_user.id not in AUTHORIZED_USERS:
-                return
-            return await func(update, context)
-        return wrapper
+  For send_long, mock update.message.reply_text and verify chunking behavior.
+  For team.py, use tmp_path to create/read YAML files — monkeypatch TASKS_DIR.
+  For disk_state.py, monkeypatch STATE_FILE path to tmp_path and test pure functions directly.
 
-  Apply it to handlers that need auth protection. Read bot/handlers/*.py first
-  to see which handlers exist and which need the decorator.
+  Don't test SSH-dependent functions (they need remote access).
 
   Acceptance:
-  - Decorator defined in bot/services/tg.py
-  - Applied to at least the sensitive handlers (run, stop, update)
-  - Existing behavior unchanged
+  - All tests pass with: python -m pytest tests/ -v
+  - At least 3 tests per module
+  - No mocking of internal logic — only mock I/O boundaries (filesystem, telegram API)
+  - Add pytest to bot/requirements.txt if not already there
 depends_on: []
-assigned_to: null
-created: "2026-03-09T22:00:00"
+assigned_to: 1
+created: "2026-03-09T14:00:00"
 claimed_by: null
 completed: null
 result_file: null

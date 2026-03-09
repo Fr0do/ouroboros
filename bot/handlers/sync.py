@@ -41,7 +41,7 @@ async def sync_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     out = stdout.decode().strip()
-    summary_lines = [l for l in out.split("\n") if l.startswith("sent ") or l.startswith("total ") or "speedup" in l]
+    summary_lines = [line for line in out.split("\n") if line.startswith("sent ") or line.startswith("total ") or "speedup" in line]
     summary = "\n".join(summary_lines[-3:]) if summary_lines else out[-500:]
 
     if proc.returncode != 0:

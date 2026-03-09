@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, JobQueue
 from ..services.disk_state import (
-    load_state, refresh_df, refresh_dua, refresh_my_usage,
+    refresh_df, refresh_dua, refresh_my_usage,
     format_report, format_my_report, WARN_PERCENT,
 )
 

@@ -1,32 +1,34 @@
 id: "002"
 status: pending
-title: "CI: upstream sync workflow"
+title: "Close stale issues #16, #17, #18"
 project: ouroboros
-priority: normal
+priority: high
 context: |
-  GitHub issue #17 — implement upstream sync + remote health ping.
+  Three GitHub issues have all their checklist items completed. Verify and close them.
 
-  Task 1 of 2: Create .github/workflows/upstream-sync.yml
-  Schedule: daily (cron). Fast-forward merge ouroboros-stable from razzant/ouroboros:main.
+  Issue #16 — bot: code hygiene pass
+  Already done: send_long and require_project extracted to bot/services/tg.py,
+  _parse_dua_output extracted in disk_state.py, crashlog handler registered in main.py.
+  All handlers that need project validation use require_project from tg.py.
 
-  Pattern:
-  - uses: actions/checkout with fetch-depth: 0
-  - git fetch upstream main
-  - git checkout ouroboros-stable
-  - git merge --ff-only upstream/main
-  - git push origin ouroboros-stable
+  Issue #17 — CI: upstream sync + remote health ping
+  Both workflows exist: .github/workflows/upstream-sync.yml and health-ping.yml.
 
-  If ff-only fails, open an issue instead of force-merging.
+  Issue #18 — team: integrate multi-agent workflow
+  Complete: bot/services/team.py, bot/handlers/team.py, /team command with list/detail/reset.
 
-  Read existing workflows in .github/workflows/ to follow the same style.
+  Action:
+  1. gh issue close 16 -c "All checklist items complete: send_long, require_project, _parse_dua_output extracted; crashlog registered."
+  2. gh issue close 17 -c "Both workflows implemented: upstream-sync.yml and health-ping.yml."
+  3. gh issue close 18 -c "Team integration complete: services/team.py, handlers/team.py, /team command with list/detail/reset."
+  4. Update OUROBOROS.md — in the Active Task Backlog section (around line 177), remove #16-#18 entries, keep only #13-#15.
 
   Acceptance:
-  - Workflow file created and valid YAML
-  - Runs on schedule (daily) and manual dispatch
-  - Only ff merges, never force
+  - All 3 issues closed on GitHub with summary comments
+  - OUROBOROS.md backlog section updated
 depends_on: []
-assigned_to: null
-created: "2026-03-09T22:00:00"
+assigned_to: 2
+created: "2026-03-09T14:00:00"
 claimed_by: null
 completed: null
 result_file: null

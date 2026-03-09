@@ -2,9 +2,10 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from ..services.team import load_tasks, load_task, save_task, task_summary_line, format_task_detail
-from ..services.tg import send_long
+from ..services.tg import authorized, send_long
 
 
+@authorized
 async def team_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/team [id|reset <id>] — view task queue or task details."""
     args = context.args or []

@@ -1,0 +1,13 @@
+id: "018"
+status: done
+title: "Add pre-commit config + ruff CI workflow"
+project: ouroboros
+priority: high
+context: |
+  Add a pre-commit setup with ruff for Python linting and a GitHub Action to run it.
+depends_on: []
+assigned_to: 1
+created: "2026-03-09T18:00:00"
+claimed_by: 1
+completed: "2026-03-09T18:30:00"
+result_file: null
