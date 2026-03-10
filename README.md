@@ -9,14 +9,15 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFr0do%2F__GIST_ID__%2Fraw%2Frtk-savings.json" alt="RTK savings">
+  <img src="https://img.shields.io/badge/RTK-60–90%25_token_savings-brightgreen" alt="RTK savings">
   <img src="https://img.shields.io/github/v/release/Fr0do/ouroboros?label=release" alt="Latest release">
   <img src="https://img.shields.io/github/issues/Fr0do/ouroboros" alt="Open issues">
+  <img src="https://img.shields.io/github/stars/Fr0do/ouroboros" alt="Stars">
 </p>
 
 ---
 
-**v6.29.0** — 2026-03-09
+**v6.30.0** — 2026-03-10
 
 ## What It Does
 
