@@ -6,3 +6,4 @@ node_modules/
 notion_pages.json
 .disk_state.json
 bot.log
+*.session
