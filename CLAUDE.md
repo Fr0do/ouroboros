@@ -48,6 +48,12 @@ Active via Claude Code hook. All shell ops auto-optimized.
 - When adding a new env var: update `env.example` in the same commit
 - `.env` is always gitignored; `env.example` is always tracked
 
+## Git Hygiene
+- **Bamboo structure**: keep a linear commit history on main — rebase, don't merge
+- **No long-lived branches**: work is atomic or stashable; delete branches after merge
+- **Rebase frequently**: `git pull --rebase` before pushing; resolve conflicts inline
+- **Stash over branch**: for WIP, prefer `git stash` over creating throwaway branches
+
 ## Commit Conventions
 - Prefix: `[feat]`, `[fix]`, `[doc]`, `[infra]`, `[bot]`, `[s_cot]`
 - Include a summary of major edits in commit messages (not just what changed in this repo)
