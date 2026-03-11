@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/RTK-82.8%25_saved_·_166K_tokens-brightgreen" alt="RTK savings">
+  <img src="https://img.shields.io/badge/RTK-78%25_saved_·_172K_tokens_·_436_cmds-brightgreen" alt="RTK savings">
   <img src="https://img.shields.io/github/v/release/Fr0do/ouroboros?label=release" alt="Latest release">
   <img src="https://img.shields.io/github/issues/Fr0do/ouroboros" alt="Open issues">
   <img src="https://img.shields.io/github/stars/Fr0do/ouroboros" alt="Stars">
@@ -33,16 +33,29 @@ Ouroboros is the coordination layer for autonomous research across multiple proj
 | Codename | Description | Status |
 |---|---|---|
 | **s_cot** | Spectral-R1: latent energy-based GRPO reasoning (NeurIPS 2025) | Training + paper writing |
-| **long-vqa** | MMReD: cross-modal dense context reasoning benchmark | Benchmark complete, eval ongoing |
+| **mmred** | MMReD: cross-modal dense context reasoning benchmark | Benchmark complete, eval ongoing |
 | **bbbo** | Bayesian black-box optimization framework | Active development |
 | **ouroboros** | This meta-project: governance, Telegram bot, multi-agent coordination | Bootstrapping |
 
 ## Infrastructure
 
 - **Compute**: kurkin-1 / kurkin-4 (shared NFS, FSDP2, vLLM)
-- **Tracking**: ClearML, Notion, Telegram alerts
-- **Token efficiency**: RTK (Rust Token Killer) — 60–90% savings on CLI ops
+- **Tracking**: ClearML, Telegram alerts
 - **CI**: Pre-commit + ruff linting, release automation, upstream sync, health ping
+
+## Token Efficiency (RTK)
+
+[Rust Token Killer](https://github.com/razzant/ouroboros) auto-proxies all Claude Code CLI operations via a shell hook, compressing outputs before they hit the context window.
+
+| Metric | Value |
+|---|---|
+| Commands proxied | 436 |
+| Tokens saved | 172K / 222K input (78%) |
+| Avg latency | 287ms |
+| Top saver | `git log -p` — 99.9% reduction (63K→64 tokens) |
+| Most frequent | `ls` — 84 calls, 67% avg savings |
+
+The biggest wins come from `git log` and `git diff` — RTK strips binary noise, truncates massive diffs, and deduplicates repeated content. Even `ls` saves ~67% by compacting directory listings.
 
 ## Bot Commands
 

@@ -30,7 +30,7 @@ Active via Claude Code hook. All shell ops auto-optimized.
 | scripts/auto-dev.sh | Autonomous feature implementation agent |
 
 ## Issue Journaling
-- **Create issues** for meaningful features/fixes before implementing
+- **ALWAYS create an issue FIRST** — before writing any code for a feature or non-trivial fix. No exceptions. Even if the user doesn't ask, create the issue, then implement. If you forget, create one retroactively and reference it.
 - **Comment progress** on issues: what was done, blockers hit, commit hashes
 - **Reference in commits**: `fixes #N` to auto-close, or mention `#N` if work continues
 - **Triage at session start**: check `gh issue list --repo Fr0do/ouroboros --state open`
@@ -51,5 +51,5 @@ Active via Claude Code hook. All shell ops auto-optimized.
 
 ## Subprojects (see OUROBOROS.md for full map)
 - s_cot → ~/experiments/s_cot_tex + kurkin-1:/workspace-SR004.nfs2/kurkin/s_cot
-- long-vqa → ~/experiments/long-vqa + kurkin-1:/workspace-SR004.nfs2/kurkin/long-vqa
+- mmred → ~/experiments/mmred + kurkin-1:/workspace-SR004.nfs2/kurkin/mmred
 - bbbo → kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer
