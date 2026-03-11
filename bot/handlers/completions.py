@@ -11,6 +11,7 @@ Flags (mix & match in any order):
   traces       — full prompt+completion in separate messages
   stats        — aggregate reward trend chart (PNG)
   baseline     — comprehensive 3x2 analysis across all steps
+  numeric      — deep numeric stats for all columns (beyond describe)
   brief        — truncate completions (default for non-trace)
 
 Examples:
@@ -25,6 +26,7 @@ Examples:
   /completions s_cot step 0:5       — first 5 steps
   /completions s_cot step ::2       — every other step
   /completions s_cot step 50 traces correct — traces from step at index 50
+  /completions s_cot numeric        — deep numeric analysis
 """
 import base64
 import io
@@ -79,6 +81,8 @@ def _parse_flags(args: list[str]) -> dict:
             opts["mode"] = "stats"
         elif a == "baseline":
             opts["mode"] = "baseline"
+        elif a == "numeric":
+            opts["mode"] = "numeric"
         elif a == "traces":
             opts["mode"] = "traces"
         elif a == "correct":
@@ -488,6 +492,171 @@ if mode == "baseline":
     }}
     print(json.dumps(result))
 
+elif mode == "numeric":
+    import numpy as _np
+
+    # Load ALL files
+    all_dfs = []
+    for f in files:
+        df = pd.read_parquet(f)
+        all_dfs.append(df)
+    full = pd.concat(all_dfs, ignore_index=True)
+
+    # Select numeric columns only
+    num_df = full.select_dtypes(include="number")
+    cols = list(num_df.columns)
+
+    if not cols:
+        print(json.dumps({{"error": "No numeric columns found."}}))
+        sys.exit(0)
+
+    # Deep stats per column
+    col_stats = {{}}
+    for c in cols:
+        s = num_df[c]
+        q1 = float(s.quantile(0.25))
+        q3 = float(s.quantile(0.75))
+        iqr = q3 - q1
+        lo = q1 - 1.5 * iqr
+        hi = q3 + 1.5 * iqr
+        outliers = int(((s < lo) | (s > hi)).sum())
+        col_stats[c] = {{
+            "count": int(s.count()),
+            "mean": float(s.mean()),
+            "std": float(s.std()),
+            "min": float(s.min()),
+            "25%": float(q1),
+            "50%": float(s.median()),
+            "75%": float(q3),
+            "max": float(s.max()),
+            "skew": float(s.skew()),
+            "kurtosis": float(s.kurtosis()),
+            "zeros": int((s == 0).sum()),
+            "nans": int(s.isna().sum()),
+            "iqr": float(iqr),
+            "outliers": outliers,
+        }}
+
+    # Correlation matrix
+    corr = num_df.corr()
+    corr_dict = {{c: {{c2: round(float(corr.loc[c, c2]), 3) for c2 in cols}} for c in cols}}
+
+    # --- Render 2x2 chart ---
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig.patch.set_facecolor("#1a1a2e")
+    fig.suptitle(f"NUMERIC ANALYSIS  |  {{len(cols)}} columns  |  {{len(full)}} rows",
+                 color="#e0e0e0", fontsize=14, fontweight="bold")
+
+    def style_ax(ax):
+        ax.set_facecolor("#16213e")
+        ax.tick_params(colors="#e0e0e0", labelsize=7)
+        for spine in ["bottom", "left"]:
+            ax.spines[spine].set_color("#333")
+        for spine in ["top", "right"]:
+            ax.spines[spine].set_visible(False)
+        ax.yaxis.label.set_color("#e0e0e0")
+        ax.xaxis.label.set_color("#e0e0e0")
+        ax.title.set_color("#e0e0e0")
+
+    for ax_row in axes:
+        for ax in ax_row:
+            style_ax(ax)
+
+    # (0,0) Box plots (z-scored for comparability)
+    ax = axes[0][0]
+    plot_cols = cols[:12]  # limit to 12 columns for readability
+    z_data = []
+    for c in plot_cols:
+        s = num_df[c].dropna()
+        if s.std() > 0:
+            z_data.append(((s - s.mean()) / s.std()).values)
+        else:
+            z_data.append(s.values)
+    bp = ax.boxplot(z_data, labels=[c[:15] for c in plot_cols], patch_artist=True,
+                    showfliers=False, medianprops=dict(color="#f72585", linewidth=1.5))
+    for patch in bp["boxes"]:
+        patch.set_facecolor("#4cc9f066")
+        patch.set_edgecolor("#4cc9f0")
+    ax.tick_params(axis="x", rotation=45)
+    ax.set_title("Z-scored Distributions (box)")
+    ax.set_ylabel("Z-score")
+
+    # (0,1) Correlation heatmap
+    ax = axes[0][1]
+    heatmap_cols = cols[:10]  # limit for readability
+    corr_matrix = num_df[heatmap_cols].corr().values
+    im = ax.imshow(corr_matrix, cmap="RdBu_r", vmin=-1, vmax=1, aspect="auto")
+    ax.set_xticks(range(len(heatmap_cols)))
+    ax.set_yticks(range(len(heatmap_cols)))
+    ax.set_xticklabels([c[:12] for c in heatmap_cols], rotation=45, ha="right", fontsize=7)
+    ax.set_yticklabels([c[:12] for c in heatmap_cols], fontsize=7)
+    # Annotate cells
+    for i in range(len(heatmap_cols)):
+        for j in range(len(heatmap_cols)):
+            val = corr_matrix[i, j]
+            color = "#000" if abs(val) < 0.5 else "#fff"
+            ax.text(j, i, f"{{val:.2f}}", ha="center", va="center", fontsize=6, color=color)
+    ax.set_title("Correlation Matrix")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+    # (1,0) Histograms for top-4 columns by variance
+    ax = axes[1][0]
+    variances = {{c: float(num_df[c].var()) for c in cols if num_df[c].var() == num_df[c].var()}}
+    top4 = sorted(variances, key=variances.get, reverse=True)[:4]
+    colors = ["#4cc9f0", "#f72585", "#4361ee", "#06d6a0"]
+    for i, c in enumerate(top4):
+        vals = num_df[c].dropna().values
+        ax.hist(vals, bins=30, alpha=0.5, color=colors[i], label=c[:15])
+    ax.legend(facecolor="#16213e", edgecolor="#333", labelcolor="#e0e0e0", fontsize=7)
+    ax.set_title("Distributions (top 4 by variance)")
+    ax.set_ylabel("Count")
+
+    # (1,1) Summary text card
+    ax = axes[1][1]
+    ax.axis("off")
+    lines = [f"Columns: {{len(cols)}}  |  Rows: {{len(full)}}\\n"]
+    for c in cols:
+        cs = col_stats[c]
+        lines.append(f"{{c[:20]:20s}}  μ={{cs['mean']:>9.3f}}  σ={{cs['std']:>8.3f}}  skew={{cs['skew']:>6.2f}}  kurt={{cs['kurtosis']:>6.2f}}  outliers={{cs['outliers']}}")
+    ax.text(0.02, 0.98, "\\n".join(lines), transform=ax.transAxes,
+            fontsize=7, verticalalignment="top", fontfamily="monospace",
+            color="#e0e0e0",
+            bbox=dict(boxstyle="round,pad=0.5", facecolor="#16213e", edgecolor="#333"))
+
+    plt.tight_layout()
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    buf.seek(0)
+    chart_b64 = base64.b64encode(buf.read()).decode()
+
+    # Caption
+    caption = f"Numeric: {{len(cols)}} columns, {{len(full)}} rows\\n"
+    # Top correlations (excluding self)
+    top_corrs = []
+    for i, c1 in enumerate(cols):
+        for j, c2 in enumerate(cols):
+            if i < j:
+                top_corrs.append((c1, c2, abs(corr_dict[c1][c2]), corr_dict[c1][c2]))
+    top_corrs.sort(key=lambda x: x[2], reverse=True)
+    if top_corrs:
+        caption += "Top correlations:\\n"
+        for c1, c2, _, r in top_corrs[:3]:
+            caption += f"  {{c1}} ~ {{c2}}: r={{r:.3f}}\\n"
+
+    result = {{
+        "type": "numeric",
+        "chart": chart_b64,
+        "caption": caption,
+        "stats_table": col_stats,
+    }}
+    print(json.dumps(result))
+
 elif mode == "stats":
     use_files = select_files(files, step_sel) if step_sel else files
     if use_files is None or len(use_files) == 0:
@@ -579,6 +748,7 @@ async def completions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             "Flags (mix & match):\n"
             "  stats        — reward trend chart (PNG)\n"
             "  baseline     — full analysis across all steps\n"
+            "  numeric      — deep numeric stats for all columns\n"
             "  traces       — full prompt+completion\n"
             "  step <IDX>   — Python-style index/slice\n"
             "                  e.g. 0, -1, -3:, 0:5, ::2\n"
@@ -627,7 +797,7 @@ async def completions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         label += f" {opts['filter']}"
     await update.message.reply_text(f"Analyzing {name} completions ({label})...")
 
-    timeout = 180 if opts["mode"] == "baseline" else 120 if opts["mode"] == "stats" else 60
+    timeout = 180 if opts["mode"] in ("baseline", "numeric") else 120 if opts["mode"] == "stats" else 60
     raw = await ssh_exec(proj["remote"], cmd, timeout=timeout)
     if not raw.strip():
         await update.message.reply_text("No output from remote script.")
@@ -646,6 +816,13 @@ async def completions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if data["type"] == "baseline":
         # Send 3x2 chart + caption
+        img_bytes = base64.b64decode(data["chart"])
+        await update.message.reply_photo(
+            photo=io.BytesIO(img_bytes),
+            caption=data.get("caption", ""),
+        )
+
+    elif data["type"] == "numeric":
         img_bytes = base64.b64decode(data["chart"])
         await update.message.reply_photo(
             photo=io.BytesIO(img_bytes),
