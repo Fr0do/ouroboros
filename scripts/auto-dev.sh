@@ -28,7 +28,10 @@ log() { echo "[auto-dev] $(date '+%H:%M:%S') $*"; }
 SKIP_ISSUES=""        # space-separated issue numbers to skip (runtime)
 SKIP_PATTERNS=""      # space-separated title patterns to skip (case-insensitive)
 
-# Load persistent skips from env (comma-separated)
+# Research projects are never auto-dev targets
+SKIP_PATTERNS="s_cot long-vqa bbbo"
+
+# Load additional skips from env (comma-separated)
 if [ -n "${AUTO_DEV_SKIP:-}" ]; then
     for pat in $(echo "$AUTO_DEV_SKIP" | tr ',' ' '); do
         SKIP_PATTERNS="$SKIP_PATTERNS $pat"
@@ -56,7 +59,7 @@ resolve_issue() {
 
     jq_filter="${jq_filter} | first.number"
 
-    # Priority 1: oldest open auto-dev issue
+    # Only process issues explicitly labeled 'auto-dev'
     local num
     num=$(gh issue list --repo "$REPO" --label auto-dev --state open \
         --json number,title --jq "$jq_filter" 2>/dev/null || true)
@@ -64,10 +67,8 @@ resolve_issue() {
         echo "$num"
         return
     fi
-    # Priority 2: oldest open issue (any label)
-    log "No auto-dev issues, falling back to oldest open issue..." >&2
-    gh issue list --repo "$REPO" --state open \
-        --json number,title --jq "$jq_filter" 2>/dev/null || true
+    # No fallback — auto-dev only handles labeled issues
+    log "No auto-dev issues found. Nothing to do." >&2
 }
 
 # ─── Claim issue ───

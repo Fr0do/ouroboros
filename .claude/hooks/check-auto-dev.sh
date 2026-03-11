@@ -12,15 +12,14 @@ issues_json=$(gh issue list --repo Fr0do/ouroboros --label auto-dev --state open
 
 [ -z "$issues_json" ] && exit 0
 
-# Filter out skipped patterns
-if [ -n "${AUTO_DEV_SKIP:-}" ]; then
-    jq_filter='.'
-    for pat in $(echo "$AUTO_DEV_SKIP" | tr ',' ' '); do
-        pat_lower=$(echo "$pat" | tr '[:upper:]' '[:lower:]')
-        jq_filter="${jq_filter} | map(select(.title | ascii_downcase | contains(\"${pat_lower}\") | not))"
-    done
-    issues_json=$(echo "$issues_json" | jq "$jq_filter")
-fi
+# Always skip research projects + user-defined patterns
+all_skip="s_cot,long-vqa,bbbo${AUTO_DEV_SKIP:+,$AUTO_DEV_SKIP}"
+jq_filter='.'
+for pat in $(echo "$all_skip" | tr ',' ' '); do
+    pat_lower=$(echo "$pat" | tr '[:upper:]' '[:lower:]')
+    jq_filter="${jq_filter} | map(select(.title | ascii_downcase | contains(\"${pat_lower}\") | not))"
+done
+issues_json=$(echo "$issues_json" | jq "$jq_filter")
 
 issues=$(echo "$issues_json" | jq -r '.[] | "#\(.number): \(.title)"' 2>/dev/null)
 
