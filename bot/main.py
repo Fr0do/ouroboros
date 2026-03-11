@@ -20,6 +20,7 @@ from .handlers.team import handler as team_handler
 from .handlers.vitals import handler as vitals_handler
 from .handlers.feature import handler as feature_handler
 from .handlers.page import handler as page_handler
+from .handlers.qr import handler as qr_handler, photo_handler as qr_photo_handler
 
 LOG_FILE = "bot.log"
 logging.basicConfig(
@@ -67,6 +68,9 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"*Health*\n"
         f"/vitals — project health dashboard \\(chart\\)\n"
         f"/vitals text — text\\-only summary\n\n"
+        f"*Artifacts*\n"
+        f"/qr _text_ — generate a QR code\n"
+        f"  _photo\\+caption_ — QR mosaic blend\n\n"
         f"*Development*\n"
         f"/feature _description_ — file GitHub issue from chat\n"
         f"/page — update project page with current vitals\n"
@@ -118,6 +122,7 @@ async def post_init(app: Application):
         BotCommand("crashlog", "Dump tmux scrollback for debugging"),
         BotCommand("team", "Multi-agent task queue"),
         BotCommand("vitals", "Project health dashboard"),
+        BotCommand("qr", "Generate QR code / mosaic"),
         BotCommand("feature", "File a feature request"),
         BotCommand("page", "Update project page"),
     ])
@@ -156,6 +161,8 @@ def main():
     app.add_handler(vitals_handler)
     app.add_handler(feature_handler)
     app.add_handler(page_handler)
+    app.add_handler(qr_handler)
+    app.add_handler(qr_photo_handler)
 
     logger.info("OuroSSS bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
