@@ -10,7 +10,7 @@
 
 | Codename | Location | Description | Status |
 |---|---|---|---|
-| **s_cot** | `kurkin-1:.../s_cot` + `~/experiments/s_cot_tex` | Spectral-R1: energy-based GRPO reasoning (NeurIPS 2025) | Training + paper |
+| **s_cot** | `kurkin-1:.../s_cot` + `~/experiments/s_cot_tex` | Spectral-R1: energy-based GRPO reasoning | Training + paper |
 | **mmred** | `kurkin-1:.../mmred` + `~/experiments/mmred` | MMReD: cross-modal dense context benchmark | Eval ongoing |
 | **bbbo** | `kurkin-1:.../bbbo/GeneralOptimizer` | Bayesian black-box optimization | Active dev |
 | **ouroboros** | `~/experiments/ouroboros` | This meta-project | Bootstrapping |
@@ -20,7 +20,7 @@
 - Dataset v4: curriculum (25% med, 35% hard, 40% expert), adjacency lists, 3-6 nodes
 - Eval: JSONPathfinder (own), NLGraph, Reasoning-Gym · Baselines: 10 models via vLLM
 - Completions: parquets in `spectral-r1-checkpoints/fixed/completions/`
-- Roadmap: curriculum training → ablations → results analysis → paper finalization → NeurIPS submission
+- Roadmap: curriculum training → ablations → results analysis → paper finalization → submission
 
 ---
 

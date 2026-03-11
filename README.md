@@ -32,7 +32,7 @@ Ouroboros is the coordination layer for autonomous research across multiple proj
 
 | Codename | Description | Status |
 |---|---|---|
-| **s_cot** | Spectral-R1: latent energy-based GRPO reasoning (NeurIPS 2025) | Training + paper writing |
+| **s_cot** | Spectral-R1: latent energy-based GRPO reasoning | Training + paper writing |
 | **mmred** | MMReD: cross-modal dense context reasoning benchmark | Benchmark complete, eval ongoing |
 | **bbbo** | Bayesian black-box optimization framework | Active development |
 | **ouroboros** | This meta-project: governance, Telegram bot, multi-agent coordination | Bootstrapping |
