@@ -1,86 +1,53 @@
-# OUROBOROS — Research Governance Protocol
+# OUROBOROS
 
 > The serpent eats its own tail: each project feeds the next, and the meta-process improves itself.
 
-**Owner**: Maxim Kurkin · **Scope**: all active research · **Interface**: Claude Code + Telegram bot
+This is not a project plan. It is a set of beliefs about how research should be conducted when the researcher and the tools are in continuous dialogue.
 
 ---
 
-## Active Projects
+## 1. The loop closes
 
-| Codename | Location | Description | Status |
-|---|---|---|---|
-| **s_cot** | `kurkin-1:.../s_cot` + `~/experiments/s_cot_tex` | Spectral-R1: energy-based GRPO reasoning | Training + paper |
-| **mmred** | `kurkin-1:.../mmred` + `~/experiments/mmred` | MMReD: cross-modal dense context benchmark | Eval ongoing |
-| **bbbo** | `kurkin-1:.../bbbo/GeneralOptimizer` | Bayesian black-box optimization | Active dev |
-| **ouroboros** | `~/experiments/ouroboros` | This meta-project | Bootstrapping |
+Every artifact produced — code, paper, infrastructure, tooling — must eventually improve the process that created it. A training pipeline that doesn't inform the next training pipeline was a dead end, not research. A governance protocol that never revises itself is bureaucracy.
 
-### s_cot State
-- Model: LFM2.5-1.2B-Thinking · Training: GRPO + spectral/accuracy/format rewards, FSDP2, vLLM colocate
-- Dataset v4: curriculum (25% med, 35% hard, 40% expert), adjacency lists, 3-6 nodes
-- Eval: JSONPathfinder (own), NLGraph, Reasoning-Gym · Baselines: 10 models via vLLM
-- Completions: parquets in `spectral-r1-checkpoints/fixed/completions/`
-- Roadmap: curriculum training → ablations → results analysis → paper finalization → submission
+## 2. Autonomy with accountability
 
----
+Agents — human or otherwise — operate with maximum freedom and minimum supervision. But every action is logged, every decision is traceable, every commit tells a story. Freedom without a trail is chaos.
 
-## Infrastructure
+## 3. Minimalism
 
-- **Compute**: kurkin-1/kurkin-4 share NFS at `/workspace-SR004.nfs2/kurkin/`
-- **Python**: `/workspace-SR004.nfs2/kurkin/envs/kurkin_313_torch/bin/python` (conda in tmux broken — use direct paths)
-- **Training**: `accelerate launch --config_file fsdp2.yaml train.py` · Set `DS_BUILD_OPS=0` (no nvcc)
-- **Services**: Telegram bot on kurkin-1, ClearML (project=s_cot), Notion (eval tracking)
-- **CI**: ruff lint on push, release on tag, upstream sync daily, health ping daily
-- **RTK**: auto-proxied via hook, 78% token savings
+One source of truth per fact. One file per concern. Delete over deprecate. If something exists in two places, one of them is wrong and both are suspect. Complexity is debt with compounding interest.
 
----
+## 4. Atomic updates
 
-## Workflow
+Every change is self-contained and non-breaking. A commit either works or it doesn't exist. A feature is either complete or it's behind an issue. No half-states, no "will fix later" comments left to rot.
 
-### Task Intake
-Telegram bot (`/status`, `/run`, `/stop`, `/logs`) or Claude Code CLI directly.
+## 5. Reproducibility
 
-### Team Mode
-Native agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`): lead + 3-5 teammates, shared task list, plan approval gates. Use subagents for focused tasks that only report back.
+Any result must be recoverable from three things: the config, the seed, and the commit hash. If a result cannot be reproduced, it is an anecdote, not a finding.
 
-### Solo Mode
-1. Read CLAUDE.md → OUROBOROS.md
-2. **Plan in Opus, implement in Sonnet** (mandatory — see CLAUDE.md cost rules)
-3. Commit working state before experiments
-4. Report completion/blockers to Telegram
+## 6. Cross-pollination
 
-### Feature Dispatch
-`/feature <desc>` via Telegram → GitHub issue with `auto-dev` label → hook injects into terminal agent → agent claims, implements, commits `fixes #N`. First to comment "Picked up" owns it.
+Projects are not silos. An insight from spectral optimization should inform black-box search. A benchmark methodology should transfer across domains. The shared workspace exists so ideas can bleed between directories.
 
-Auto-dev agent: `./scripts/auto-dev.sh [--watch|N]` — headless Claude with pre-approved permissions, 30min budget, claims+implements+pushes.
+## 7. Minimal overhead
+
+Every tool must justify its existence by saving more time than it costs. Telegram for control, GitHub for memory, RTK for efficiency. If a process requires a meeting, the process is wrong.
+
+## 8. Issues before code
+
+The impulse to write code before thinking is a form of procrastination. An issue is a commitment to a direction. A commit without an issue is a change without a reason.
+
+## 9. Plan in the large, implement in the small
+
+Architecture deserves the strongest reasoning. Implementation deserves the fastest hands. These are different skills and often different models. Never use a sledgehammer to type.
+
+## 10. Ship or kill
+
+A project that hasn't shipped in three months needs either a deadline or a funeral. Research that never leaves the cluster is a hobby. Papers that never leave the overleaf are drafts. Be honest about which is which.
 
 ---
 
-## Conventions
-
-- **Issues-first**: create GH issue before coding any feature/fix. `fixes #N` in commits. Comment progress.
-- **Atomic commits**: self-contained, non-breaking. Linear history (rebase).
-- **Secrets**: never echo/commit. `.env` gitignored, `env.example` tracked.
-- **Design**: Apple-minimalist. White backgrounds, clean lines.
-- **Don't**: edit local s_cot (use scp), auto-run training, skip issues for non-trivial work.
-
----
-
-## Principles
-
-1. **Autonomy with accountability** — agents log everything
-2. **Minimal overhead** — RTK, Telegram, GitHub
-3. **Reproducibility** — config + seed + commit hash
-4. **Cross-pollination** — projects share insights
-5. **The loop closes** — this doc evolves
-6. **Atomic updates** — self-contained commits
-7. **Minimalism** — single source of truth; delete over deprecate
-
----
-
-## Version
-- v6.30.1 — 2026-03-11 — Notion eval tracking, s_cot website page, cost optimization
-- v6.30.0 — 2026-03-10 — GitHub Pages, /page command, auto-vitals
-- v6.29.0 — 2026-03-09 — /completions baseline, /feature, /vitals, issue journaling
-- v6.28.4 — 2026-03-09 — Deep research (22 refs), curriculum dataset, RCD refactor
-- v0.1.0 — 2026-03-08 — Initial bootstrap
+*For project registry and infrastructure, see [PROJECTS.md](PROJECTS.md).*
+*For version history, see [CHANGELOG.md](CHANGELOG.md).*
+*For development conventions, see [CLAUDE.md](CLAUDE.md).*

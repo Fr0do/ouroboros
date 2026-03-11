@@ -22,7 +22,9 @@ Root governance for Max's research. Bot (`bot/`), governance protocol (`OUROBORO
 ## Key Files
 | File | Purpose |
 |---|---|
-| OUROBOROS.md | Full protocol — projects, infra, workflow, principles |
+| OUROBOROS.md | Research philosophy and principles |
+| PROJECTS.md | Project registry, infrastructure, workflow |
+| CHANGELOG.md | Version history |
 | bot/main.py | Telegram bot entry (18 handlers) |
 | bot/services/tg.py | Shared helpers (send_long, @authorized, require_project) |
 | scripts/auto-dev.sh | Autonomous agent for `auto-dev` labeled issues |
