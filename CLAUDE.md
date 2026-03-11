@@ -4,12 +4,11 @@
 Root governance project for all of Max's research. Contains:
 - **OUROBOROS.md** — research meta-protocol (project registry, workflow, principles)
 - **bot/** — Telegram control panel for autonomous agent oversight
-- **notion_bootstrap.py** — one-time Notion workspace initializer
 
 ## Environment
 - Local macOS: SSH access to kurkin-1, kurkin-4
-- Secrets in .env (TELEGRAM_TOKEN, NOTION_SECRET)
-- Python deps: python-telegram-bot, notion-client, python-dotenv
+- Secrets in .env (TELEGRAM_TOKEN)
+- Python deps: python-telegram-bot, python-dotenv
 
 ## Model Strategy
 - **Plan with Opus, implement with Sonnet**: For non-trivial tasks, use Opus for planning/architecture, then delegate implementation to Sonnet subagents (cheaper, faster for code writing)
@@ -28,7 +27,7 @@ Active via Claude Code hook. All shell ops auto-optimized.
 | bot/main.py | Telegram bot entry point |
 | bot/services/tg.py | Shared Telegram helpers (send_long, require_project) |
 | bot/services/ssh.py | SSH/tmux/GPU operations |
-| notion_bootstrap.py | One-time Notion workspace setup |
+| scripts/auto-dev.sh | Autonomous feature implementation agent |
 
 ## Issue Journaling
 - **Create issues** for meaningful features/fixes before implementing

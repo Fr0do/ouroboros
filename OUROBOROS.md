@@ -35,7 +35,7 @@
 
 | **long-vqa** | `~/experiments/long-vqa` + `kurkin-1:/workspace-SR004.nfs2/kurkin/long-vqa` | MMReD: cross-modal dense context reasoning benchmark. MERA integration. | Benchmark complete, eval ongoing |
 | **bbbo** | `kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer` | Bayesian black-box optimization framework | Active development |
-| **ouroboros** | `~/experiments/ouroboros` | This meta-project: governance, Telegram bot, Notion integration | Bootstrapping |
+| **ouroboros** | `~/experiments/ouroboros` | This meta-project: governance, Telegram bot, CI/CD | Bootstrapping |
 
 ---
 
@@ -56,7 +56,6 @@
 - Conda activation in tmux is broken — use direct python/accelerate paths instead
 
 ### Services
-- **Notion** (notes/knowledge base): Integration ID in `.env`
 - **Telegram** (fast control panel): Bot runs on kurkin-1, needs `LOCAL_HOSTNAME=kurkin-1` in `.env`. `/update` command does git pull + restart from Telegram
 - **ClearML** (experiment tracking): project=s_cot, auto-logged from training scripts
 - **GitLab** (ai.cloud.ru): Source hosting for remote projects
@@ -114,27 +113,13 @@ When Claude Code runs autonomously on a project:
 3. **Plan with Opus, implement with Sonnet** — use Opus for design/architecture, delegate code writing to Sonnet subagents when feasible (skip if Opus limits are fine)
 4. Commit working state before any experiment
 5. Log all runs: name, config, key metrics
-6. Push notes to Notion (project page + daily log)
-7. Report completion / blockers to Telegram
+6. Report completion / blockers to Telegram
 
 ### 4. Cross-Project Syncing
 - s_cot training results → s_cot_tex paper (via scp or git)
 - long-vqa eval metrics → s_cot paper (comparison baselines)
 - bbbo optimizer → potential hyperparameter backend for s_cot/long-vqa
-- All project milestones → Notion research timeline
-
-### 5. Notion Structure
-```
-Ouroboros (root page)
-├── Research Timeline       # Weekly milestones, decisions, blockers
-├── s_cot                   # Training logs, metrics, paper drafts
-├── long-vqa (MMReD)        # Benchmark results, MERA submission status
-├── bbbo                    # Optimizer benchmarks, comparisons
-├── Ideas & Backlog         # Future directions, paper ideas
-└── Infrastructure          # Env configs, credentials (private), setup notes
-```
-
-### 6. Paper Pipeline
+### 5. Paper Pipeline
 1. Experiments run on remotes (kurkin-1/4)
 2. Results sync to local `~/experiments/<project>_tex/`
 3. LaTeX compiled locally (latexmk)
@@ -222,7 +207,7 @@ tmux split-window -t ouro './scripts/auto-dev.sh --watch'
 ## Principles
 
 1. **Autonomy with accountability** — agents work independently but log everything
-2. **Minimal overhead** — RTK for tokens, Telegram for control, Notion for memory
+2. **Minimal overhead** — RTK for tokens, Telegram for control, GitHub for memory
 3. **Reproducibility** — every experiment has a config, seed, and commit hash
 4. **Cross-pollination** — projects share insights, not just code
 5. **The loop closes** — OUROBOROS.md itself gets updated as the process improves

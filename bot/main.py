@@ -9,7 +9,6 @@ from .handlers.status import handler as status_handler
 from .handlers.run import handler as run_handler
 from .handlers.stop import handler as stop_handler
 from .handlers.logs import handler as logs_handler
-from .handlers.note import note_cmd, task_cmd
 from .handlers.update import handler as update_handler
 from .handlers.ckpt import handler as ckpt_handler
 from .handlers.disk import handler as disk_handler, schedule_watchdog
@@ -61,9 +60,6 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"/disk scan — full dua rescan\n"
         f"/disk me — your directory breakdown\n"
         f"/sync _project_ \\[subpath] — rsync to local\n\n"
-        f"*Notes*\n"
-        f"/note _project_ _text_ — log to Notion\n"
-        f"/task _text_ — add to backlog\n\n"
         f"*Team*\n"
         f"/team — task queue overview\n"
         f"/team _id_ — task details\n"
@@ -112,8 +108,6 @@ async def post_init(app: Application):
         BotCommand("run", "Run command on project"),
         BotCommand("stop", "Stop project (Ctrl-C)"),
         BotCommand("logs", "Tail tmux logs"),
-        BotCommand("note", "Log note to Notion"),
-        BotCommand("task", "Add to backlog"),
         BotCommand("gpu", "GPU utilization"),
         BotCommand("update", "Git pull + restart"),
         BotCommand("ckpt", "List checkpoints"),
@@ -151,8 +145,6 @@ def main():
     app.add_handler(run_handler)
     app.add_handler(stop_handler)
     app.add_handler(logs_handler)
-    app.add_handler(note_cmd)
-    app.add_handler(task_cmd)
     app.add_handler(update_handler)
     app.add_handler(ckpt_handler)
     app.add_handler(disk_handler)
