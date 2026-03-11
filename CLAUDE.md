@@ -1,67 +1,50 @@
-# CLAUDE.md — Ouroboros (Meta-Project)
+# CLAUDE.md — Ouroboros
 
 ## What Is This
-Root governance project for all of Max's research. Contains:
-- **OUROBOROS.md** — research meta-protocol (project registry, workflow, principles)
-- **bot/** — Telegram control panel for autonomous agent oversight
+Root governance for Max's research. Bot (`bot/`), governance protocol (`OUROBOROS.md`).
+
+## Cost Discipline
+**Budget: $20/day.** Opus was 98% of $108 over 4 days. Delegation is mandatory, not optional.
+
+| Task type | Model | Examples |
+|---|---|---|
+| Planning, architecture, debugging | **Opus** (you) | Design decisions, complex reasoning, code review |
+| Implementation (>20 lines) | **Sonnet subagent** | New files, handlers, refactoring, tests, HTML/CSS |
+| Exploration, search, summarization | **Haiku subagent** | Codebase search, file exploration, rote transforms |
+
+**Hard rule**: before writing >20 lines of code yourself, launch a Sonnet `Agent` subagent. No exceptions. Opus writes plans and reviews; Sonnet writes code.
 
 ## Environment
-- Local macOS: SSH access to kurkin-1, kurkin-4
-- Secrets in .env (TELEGRAM_TOKEN)
-- Python deps: python-telegram-bot, python-dotenv
-
-## Model Strategy
-- **Plan with Opus, implement with Sonnet**: For non-trivial tasks, use Opus for planning/architecture, then delegate implementation to Sonnet subagents (cheaper, faster for code writing)
-- If Opus rate limits are not a concern, Opus implementation is fine
-- Heavy code generation, refactoring, and boilerplate → prefer Sonnet subagents
-- Design decisions, debugging strategy, complex reasoning → keep in Opus
-
-## RTK
-Active via Claude Code hook. All shell ops auto-optimized.
+- macOS → SSH to kurkin-1, kurkin-4 (shared NFS: `/workspace-SR004.nfs2/kurkin/`)
+- Secrets in `.env` (gitignored). `env.example` tracked — update both together.
+- Python deps: python-telegram-bot, python-dotenv, notion-client
 
 ## Key Files
 | File | Purpose |
 |---|---|
-| OUROBOROS.md | Global research governance — read first |
-| .env | Secrets (gitignored) |
-| bot/main.py | Telegram bot entry point |
-| bot/services/tg.py | Shared Telegram helpers (send_long, require_project) |
-| bot/services/ssh.py | SSH/tmux/GPU operations |
-| scripts/auto-dev.sh | Autonomous feature implementation agent |
+| OUROBOROS.md | Full protocol — projects, infra, workflow, principles |
+| bot/main.py | Telegram bot entry (18 handlers) |
+| bot/services/tg.py | Shared helpers (send_long, @authorized, require_project) |
+| scripts/auto-dev.sh | Autonomous agent for `auto-dev` labeled issues |
 
 ## Issue Journaling
-- **ALWAYS create an issue FIRST** — before writing any code for a feature or non-trivial fix. No exceptions. Even if the user doesn't ask, create the issue, then implement. If you forget, create one retroactively and reference it.
-- **Comment progress** on issues: what was done, blockers hit, commit hashes
-- **Reference in commits**: `fixes #N` to auto-close, or mention `#N` if work continues
-- **Triage at session start**: check `gh issue list --repo Fr0do/ouroboros --state open`
+- **Create issue FIRST** — before any feature/fix code. No exceptions. Retroactive if forgotten.
+- `fixes #N` in commits to auto-close. Comment progress + commit hashes.
+- Triage: `gh issue list --repo Fr0do/ouroboros --state open`
 
-## Feature Dispatch (auto-dev)
-- A `UserPromptSubmit` hook (`.claude/hooks/check-auto-dev.sh`) checks for `auto-dev` labeled issues
-- If you see "AUTO-DEV" in hook output, pick up the issue immediately
-- Comment "Picked up" on the issue to claim it (prevents other agents from duplicating work)
-- Implement, commit with `fixes #N`, the label is removed when the issue closes
-- See OUROBOROS.md "Feature Dispatch" for full protocol
+## Auto-Dev Dispatch
+Hook (`.claude/hooks/check-auto-dev.sh`) injects pending `auto-dev` issues into context.
+If you see `[AUTO-DEV DISPATCH]` → claim it ("Picked up"), implement, commit with `fixes #N`.
 
-## Secrets & env.example
-- **Never** echo, print, or write actual secrets (tokens, keys, passwords) to files, terminal, or commits
-- Every repo that uses `.env` must have an `env.example` with keys only (no values), committed to git
-- When adding a new env var: update `env.example` in the same commit
-- `.env` is always gitignored; `env.example` is always tracked
-
-## Git Hygiene
-- **Bamboo structure**: keep a linear commit history on main — rebase, don't merge
-- **No long-lived branches**: work is atomic or stashable; delete branches after merge
-- **Rebase frequently**: `git pull --rebase` before pushing; resolve conflicts inline
-- **Stash over branch**: for WIP, prefer `git stash` over creating throwaway branches
-
-## Commit Conventions
+## Git
+- Linear history (rebase, not merge). Commit & push by default.
 - Prefix: `[feat]`, `[fix]`, `[doc]`, `[infra]`, `[bot]`, `[s_cot]`
-- Include a summary of major edits in commit messages (not just what changed in this repo)
-- For remote-only changes (e.g. s_cot training code uploaded via scp), document them in the commit body
-- Format: short title line, blank line, bullet list of all significant changes including remote/subproject work
-- Always note which subproject was affected and what was changed conceptually
+- Commit body: bullet list of all significant changes including remote/subproject work
 
-## Subprojects (see OUROBOROS.md for full map)
-- s_cot → ~/experiments/s_cot_tex + kurkin-1:/workspace-SR004.nfs2/kurkin/s_cot
-- mmred → ~/experiments/mmred + kurkin-1:/workspace-SR004.nfs2/kurkin/mmred
-- bbbo → kurkin-1:/workspace-SR004.nfs2/kurkin/bbbo/GeneralOptimizer
+## Subprojects
+- s_cot → `~/experiments/s_cot_tex` + `kurkin-1:.../s_cot` (don't edit local — use scp)
+- mmred → `~/experiments/mmred` + `kurkin-1:.../mmred`
+- bbbo → `kurkin-1:.../bbbo/GeneralOptimizer`
+
+## Design Style
+Apple-minimalist. White backgrounds, clean lines, generous whitespace. No dark themes for print.
