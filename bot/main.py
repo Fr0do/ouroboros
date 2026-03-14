@@ -22,6 +22,7 @@ from .handlers.feature import handler as feature_handler
 from .handlers.page import handler as page_handler
 from .handlers.qr import handler as qr_handler, photo_handler as qr_photo_handler
 from .handlers.eval import handler as eval_handler
+from .handlers.research import handler as research_handler
 
 LOG_FILE = "bot.log"
 logging.basicConfig(
@@ -81,6 +82,10 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"/eval push _ckpt step bench topo acc fmt len_ — push to Notion\n"
         f"/eval list \\[limit] — recent eval results\n"
         f"/eval summary — latest per benchmark\n\n"
+        f"*Research Log*\n"
+        f"/research log _project type title_ \\| _summary_ \\[\\| _metrics_] — log entry\n"
+        f"/research list \\[project] \\[limit] — recent entries\n"
+        f"/research sync — sync status\n\n"
         f"*System*\n"
         f"/crashlog _project_ — dump tmux scrollback on crash\n"
         f"/update — git pull \\+ restart\n"
@@ -131,6 +136,7 @@ async def post_init(app: Application):
         BotCommand("feature", "File a feature request"),
         BotCommand("page", "Update project page"),
         BotCommand("eval", "Eval tracking (Notion)"),
+        BotCommand("research", "Research log (Notion)"),
     ])
 
 
@@ -170,6 +176,7 @@ def main():
     app.add_handler(qr_handler)
     app.add_handler(qr_photo_handler)
     app.add_handler(eval_handler)
+    app.add_handler(research_handler)
 
     logger.info("OuroSSS bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

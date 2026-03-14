@@ -10,6 +10,7 @@ BOT_TMUX_SESSION = os.getenv("BOT_TMUX_SESSION", "ouro")
 GH_BIN = os.getenv("GH_BIN", os.path.expanduser("~/.local/bin/gh"))
 NOTION_SECRET = os.getenv("NOTION_SECRET", "")
 NOTION_DB_ID = os.getenv("NOTION_DB_ID", "")
+NOTION_RESEARCH_DB_ID = os.getenv("NOTION_RESEARCH_DB_ID", "")
 
 # First run: send /start to bot, copy your user ID here
 AUTHORIZED_USERS: set[int] = set()

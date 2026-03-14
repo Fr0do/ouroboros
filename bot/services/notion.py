@@ -1,13 +1,15 @@
 """
-Notion integration for s_cot eval tracking.
+Notion integration for s_cot eval tracking and research log.
 
-Connects to a Notion database to store and query evaluation results.
+Connects to Notion databases to store and query evaluation results
+and collaborator-facing research log entries.
 Requires NOTION_SECRET and NOTION_DB_ID in .env.
+Optional: NOTION_RESEARCH_DB_ID for research log.
 """
 import logging
 from datetime import datetime, timezone
 
-from .config import NOTION_SECRET, NOTION_DB_ID
+from .config import NOTION_SECRET, NOTION_DB_ID, NOTION_RESEARCH_DB_ID
 
 logger = logging.getLogger("ouroboros")
 
@@ -23,9 +25,22 @@ TOPOLOGIES = {"erdos_renyi", "power_law", "mixed"}
 MODELS = {"LFM2.5-1.2B-Thinking", "Qwen3-1.7B"}
 
 
+RESEARCH_PROJECTS = {"s_cot", "mmred", "bbbo", "ouroboros"}
+RESEARCH_TYPES = {"finding", "milestone", "progress", "experiment", "decision"}
+RESEARCH_STATUSES = {"active", "completed", "blocked", "archived"}
+
+
 def _get_client():
     """Return a Notion client, or None if not configured."""
     if not NOTION_SECRET or not NOTION_DB_ID:
+        return None
+    from notion_client import Client
+    return Client(auth=NOTION_SECRET)
+
+
+def _get_research_client():
+    """Return a Notion client for the research log DB, or None if not configured."""
+    if not NOTION_SECRET or not NOTION_RESEARCH_DB_ID:
         return None
     from notion_client import Client
     return Client(auth=NOTION_SECRET)
@@ -112,6 +127,91 @@ def format_eval_summary(results: list[dict]) -> str:
             f"  {r['checkpoint']} | {r['benchmark']}\n"
             f"  acc={acc}  fmt={fmt}  len={avg_len}\n"
             f"  {r['model']} | {r['topology']} | {r['date'] or ''}\n"
+        )
+    return "\n".join(lines)
+
+
+# -- Research Log --
+
+def push_research_log(
+    project: str,
+    type: str,
+    title: str,
+    summary: str,
+    metrics: str = "",
+    status: str = "active",
+) -> dict | None:
+    """Create a new research log entry in Notion. Returns the created page or None."""
+    client = _get_research_client()
+    if client is None:
+        return None
+
+    properties = {
+        "Title": {"title": [{"text": {"content": title}}]},
+        "Project": {"select": {"name": project}},
+        "Type": {"select": {"name": type}},
+        "Summary": {"rich_text": [{"text": {"content": summary}}]},
+        "Metrics": {"rich_text": [{"text": {"content": metrics}}] if metrics else []},
+        "Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
+        "Status": {"select": {"name": status}},
+    }
+
+    page = client.pages.create(
+        parent={"database_id": NOTION_RESEARCH_DB_ID},
+        properties=properties,
+    )
+    logger.info(f"Notion: created research log entry '{title}' [{project}/{type}]")
+    return page
+
+
+def get_research_log(project: str | None = None, limit: int = 10) -> list[dict]:
+    """Query recent research log entries, optionally filtered by project."""
+    client = _get_research_client()
+    if client is None:
+        return []
+
+    filter_obj = None
+    if project:
+        filter_obj = {"property": "Project", "select": {"equals": project}}
+
+    kwargs = dict(
+        database_id=NOTION_RESEARCH_DB_ID,
+        sorts=[{"property": "Date", "direction": "descending"}],
+        page_size=min(limit, 100),
+    )
+    if filter_obj:
+        kwargs["filter"] = filter_obj
+
+    response = client.databases.query(**kwargs)
+
+    results = []
+    for page in response.get("results", []):
+        props = page["properties"]
+        results.append({
+            "title": _get_title(props.get("Title", {})),
+            "project": _get_select(props.get("Project", {})),
+            "type": _get_select(props.get("Type", {})),
+            "summary": _get_rich_text(props.get("Summary", {})),
+            "metrics": _get_rich_text(props.get("Metrics", {})),
+            "date": _get_date(props.get("Date", {})),
+            "status": _get_select(props.get("Status", {})),
+        })
+    return results
+
+
+def format_research_log(entries: list[dict]) -> str:
+    """Format research log entries as a Telegram-friendly markdown string."""
+    if not entries:
+        return "No research log entries found."
+
+    lines = ["*Research Log*\n"]
+    for e in entries:
+        metrics_line = f"\n  metrics: {e['metrics']}" if e["metrics"] else ""
+        lines.append(
+            f"*{e['title']}*\n"
+            f"  {e['project']} | {e['type']} | {e['status']} | {e['date'] or ''}\n"
+            f"  {e['summary']}"
+            f"{metrics_line}\n"
         )
     return "\n".join(lines)
 
