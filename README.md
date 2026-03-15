@@ -9,68 +9,20 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/RTK-78%25_saved_·_172K_tokens_·_436_cmds-brightgreen" alt="RTK savings">
   <img src="https://img.shields.io/github/v/release/Fr0do/ouroboros?label=release" alt="Latest release">
   <img src="https://img.shields.io/github/issues/Fr0do/ouroboros" alt="Open issues">
-  <img src="https://img.shields.io/github/stars/Fr0do/ouroboros" alt="Stars">
 </p>
 
 ---
 
-**v6.30.0** — 2026-03-10
-
 ## What It Does
 
-Ouroboros is the coordination layer for autonomous research across multiple projects, machines, and AI agents. It provides:
+Ouroboros is a coordination layer for autonomous research across multiple projects, machines, and AI agents:
 
-- **Telegram bot** — remote control panel for training runs, GPU/disk monitoring, completions analysis, and crash alerts (`bot/`)
+- **Telegram bot** — remote control panel for training runs, monitoring, and crash alerts (`bot/`)
 - **Multi-agent orchestration** — native Claude Code agent teams + filesystem fallback (`team/`)
-- **Research protocol** — project registry, workflow conventions, cross-project syncing (`OUROBOROS.md`)
+- **Research protocol** — project registry, workflow conventions, cross-project syncing
 - **Self-improving workflow** — issue journaling, automatic triage, feature requests from Telegram
-
-## Active Projects
-
-| Codename | Description | Status |
-|---|---|---|
-| **s_cot** | Spectral-R1: latent energy-based GRPO reasoning | Training + paper writing |
-| **mmred** | MMReD: cross-modal dense context reasoning benchmark | Benchmark complete, eval ongoing |
-| **bbbo** | Bayesian black-box optimization framework | Active development |
-| **ouroboros** | This meta-project: governance, Telegram bot, multi-agent coordination | Bootstrapping |
-
-## Infrastructure
-
-- **Compute**: kurkin-1 / kurkin-4 (shared NFS, FSDP2, vLLM)
-- **Tracking**: ClearML, Telegram alerts
-- **CI**: Pre-commit + ruff linting, release automation, upstream sync, health ping
-
-## Token Efficiency (RTK)
-
-[Rust Token Killer](https://github.com/razzant/ouroboros) auto-proxies all Claude Code CLI operations via a shell hook, compressing outputs before they hit the context window.
-
-| Metric | Value |
-|---|---|
-| Commands proxied | 436 |
-| Tokens saved | 172K / 222K input (78%) |
-| Avg latency | 287ms |
-| Top saver | `git log -p` — 99.9% reduction (63K→64 tokens) |
-| Most frequent | `ls` — 84 calls, 67% avg savings |
-
-The biggest wins come from `git log` and `git diff` — RTK strips binary noise, truncates massive diffs, and deduplicates repeated content. Even `ls` saves ~67% by compacting directory listings.
-
-## Bot Commands
-
-| Command | Description |
-|---|---|
-| `/status` | Project states + GPU utilization |
-| `/run` `/stop` `/logs` | Training session control |
-| `/completions <proj> baseline` | Full multi-axis GRPO analysis (3x2 chart) |
-| `/completions <proj> stats` | Reward trend chart |
-| `/completions <proj> traces` | Full prompt+completion traces |
-| `/vitals` | Agent evolution dashboard |
-| `/feature <text>` | File a feature request → GitHub issue |
-| `/team` | Multi-agent task queue overview |
-| `/disk` `/gpu` `/ckpt` | Infrastructure monitoring |
-| `/crashlog` `/metrics` `/sync` | Debugging & data sync |
 
 ## Setup
 
