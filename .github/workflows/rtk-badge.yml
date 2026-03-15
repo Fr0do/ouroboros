@@ -18,7 +18,10 @@ jobs:
       - name: Read badge data
         id: badge
         run: |
-          echo "json=$(cat .github/rtk-badge.json)" >> "$GITHUB_OUTPUT"
+          MSG=$(jq -r '.message' .github/rtk-badge.json)
+          COLOR=$(jq -r '.color' .github/rtk-badge.json)
+          echo "message=$MSG" >> "$GITHUB_OUTPUT"
+          echo "color=$COLOR" >> "$GITHUB_OUTPUT"
 
       - name: Create badge
         uses: schneegans/dynamic-badges-action@v1.7.0
@@ -27,5 +30,5 @@ jobs:
           gistID: ${{ vars.RTK_BADGE_GIST_ID }}
           filename: rtk-savings.json
           label: RTK savings
-          message: ${{ fromJSON(steps.badge.outputs.json).message }}
-          color: ${{ fromJSON(steps.badge.outputs.json).color }}
+          message: ${{ steps.badge.outputs.message }}
+          color: ${{ steps.badge.outputs.color }}
