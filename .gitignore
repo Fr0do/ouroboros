@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+.venv/
 notion_pages.json
 .disk_state.json
 bot.log

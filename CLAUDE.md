@@ -17,7 +17,8 @@ Root governance for Max's research. Bot (`bot/`), governance protocol (`OUROBORO
 ## Environment
 - macOS → SSH to kurkin-1, kurkin-4 (shared NFS: `/workspace-SR004.nfs2/kurkin/`)
 - Secrets in `.env` (gitignored). `env.example` tracked — update both together.
-- Python deps: python-telegram-bot, python-dotenv, notion-client
+- Deps managed via `uv` + `pyproject.toml`. Lock: `uv.lock` (tracked). Run `uv lock` after changing deps.
+- Install: `uv pip install -e ".[dev]"` (into any Python ≥3.12 env)
 
 ## Key Files
 | File | Purpose |
