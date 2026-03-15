@@ -1,23 +1,47 @@
-# Team — Multi-Agent Coordination
+# Team — Model-Aware Task Dispatch
 
-Native Claude Code agent teams are the primary method for multi-agent work.
+Tasks are automatically routed to the optimal model based on their type.
 
-Docs: https://code.claude.com/docs/en/agent-teams
+## Model routing
 
-## Filesystem fallback
+| Task type | Model | Agent tool param | When to use |
+|---|---|---|---|
+| `plan` | Opus (lead) | — | Architecture, design decisions, complex debugging |
+| `implement` | Sonnet | `model: "sonnet"` | Code >20 lines, new files, refactoring, tests |
+| `explore` | Haiku | `model: "haiku"` | Codebase search, file discovery, summarization |
+| `review` | Opus (lead) | — | Code review, security audit, quality check |
 
-When native agent teams are unavailable (e.g. offline, SSH-only environments),
-the file-based task queue in `team/tasks/` can still be used:
+## Task YAML schema
 
-- Write task YAML files to `team/tasks/` (one per task)
-- Workers claim tasks, execute, write results to `team/results/`
-- Lifecycle: `pending -> claimed -> done | failed`
+```yaml
+id: "042"
+type: implement          # plan | implement | explore | review
+title: "Add /research handler"
+project: ouroboros       # ouroboros | s_cot | mmred | bbbo
+status: pending          # pending | running | done | failed
+context: |
+  Description of what needs to be done.
+  Include file paths, acceptance criteria.
+result: null             # filled on completion
+created: "2026-03-15"
+```
 
-This is a fallback — prefer native teams when possible.
+## Usage
 
-## Directory layout
+Tasks can be created via:
+- `/feature` Telegram command → auto-creates task YAML
+- `gh issue` with `auto-dev` label → picked up by `scripts/auto-dev.sh`
+- Manual YAML in `team/tasks/`
 
-| Path | Purpose |
-|---|---|
-| `team/tasks/*.yaml` | File-based task queue (fallback) |
-| `team/results/*.md` | Completed work artifacts |
+The lead (Opus) orchestrates: reads tasks, delegates to subagents with the correct `model` parameter, reviews results.
+
+## Dispatch logic
+
+```
+if type == "plan" or "review":
+    lead handles directly (Opus)
+elif type == "implement":
+    Agent(model="sonnet", prompt=context)
+elif type == "explore":
+    Agent(model="haiku", subagent_type="Explore", prompt=context)
+```
