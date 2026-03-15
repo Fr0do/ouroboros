@@ -1,0 +1,144 @@
+# folders.example.yaml — sanitized example for tg-organize.py
+#
+# Copy this to folders.yaml and customize for your own Telegram organization.
+# ORDER MATTERS — first match wins (exclusive folder assignment per chat).
+#
+# Matching rules:
+#   - Keywords match against chat/channel title (case-insensitive substring)
+#   - Short keywords (≤3 chars) use word-boundary matching to avoid false positives
+#   - catch_types: [channel] — claim all remaining unmatched channels of that type
+#
+# Color values: 0=blue, 1=yellow, 2=green, 3=cyan, 4=red, 5=pink, 6=purple
+
+Research:
+  emoticon: "🔬"
+  color: 6  # purple
+  keywords:
+    # Core ML/AI abbreviations (word-boundary matched)
+    - ai
+    - ml
+    - dl
+    - nlp
+    - cv
+    - llm
+    - rl
+    - rlhf
+    - grpo
+    - vqa
+    - vllm
+    - fsdp
+    # Academic venues & publishing
+    - arxiv
+    - paper
+    - neurips
+    - icml
+    - iclr
+    - acl
+    - emnlp
+    - cvpr
+    - aaai
+    - phd
+    # Generic lab / university keywords — add your own institution names here
+    - university
+    - institute
+    - lab
+    - seminar
+    # Well-known public AI organizations (keep or remove as needed)
+    - openai
+    - hugging
+    # ML topics
+    - multimodal
+    - optimizer
+    - reasoning
+    - benchmark
+    - transformer
+    - diffusion
+    - spectral
+    - neural
+    - attention
+    - embedding
+    - encoder
+    - training
+    - inference
+    - dataset
+    - annotation
+    - grounding
+    - data science
+    - data engineering
+    - deep learning
+    - machine learning
+    - reinforcement learning
+    - federated learning
+    - computer vision
+    - reading group
+    - reading club
+    - research
+    - science
+    - robotics
+    - synthetic data
+    # Add native-language equivalents below, e.g.:
+    # - "исследован"   # Russian: "research"
+    # - "обучение"     # Russian: "training"
+    # - "нейро"        # Russian: "neuro"
+
+Life:
+  emoticon: "🎸"
+  color: 1  # yellow
+  keywords:
+    # Friend groups — replace with your own group chat names/keywords
+    - friends
+    - crew
+    - hangout
+    # Sports & fitness
+    - sport
+    - gym
+    - boxing
+    - ski
+    - freeride
+    - volleyball
+    - cycling
+    # Music & culture
+    - hardcore
+    - punk
+    - metal
+    - party
+    - music
+    # Humor & memes
+    - meme
+    - funny
+    # Books, philosophy, lifestyle
+    - bookclub
+    - philosophy
+    - cooking
+    - recipe
+    - meditation
+    # Community & social
+    - alumni
+    - lost and found
+    - travel
+    - adventure
+    - vpn
+    # Career (personal networking, not news)
+    - career
+    - job
+
+News:
+  emoticon: "📰"
+  color: 0  # blue
+  catch_types: [channel]  # fallback: claim all remaining unmatched channels
+  keywords:
+    # News outlets & aggregators — add the ones you follow
+    - news
+    - hacker news
+    - techcrunch
+    - wired
+    # Finance & economics
+    - invest
+    - economics
+    - markets
+    # Rationality / long-form commentary
+    - lesswrong
+    - e/acc
+    # Add native-language news keywords here, e.g.:
+    # - "новости"      # Russian: "news"
+    # - "экономик"     # Russian: "economics"

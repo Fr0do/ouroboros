@@ -18,6 +18,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import re
+
 import yaml
 from dotenv import load_dotenv
 from telethon import TelegramClient, functions, types
@@ -41,47 +43,42 @@ SESSION = str(Path(__file__).resolve().parent.parent / ".tg_session")
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 log = logging.getLogger("tg-organize")
 
-# ── Default folder blueprint ────────────────────────────────────────────
+# ── Default config ───────────────────────────────────────────────────────
+# Only creates NEW folders and archives dead chats.
+# Existing folders are never modified unless explicitly listed in a YAML config.
+RESEARCH_KEYWORDS = [
+    "ai", "ml", "dl", "nlp", "cv", "llm", "grpo", "rl", "rlhf",
+    "arxiv", "paper", "neurips", "icml", "iclr", "acl", "emnlp", "cvpr",
+    "research", "lab", "science", "deep learning", "machine learning",
+    "neural", "transformer", "diffusion", "spectral",
+    "airi", "skoltech", "phd", "gonzo", "hugging", "openai",
+]
+
 DEFAULT_FOLDERS = {
     "Research": {
-        "keywords": ["arxiv", "paper", "neurips", "icml", "iclr", "acl", "emnlp",
-                      "research", "lab", "phd", "science", "ml", "ai", "deep learning"],
+        "keywords": RESEARCH_KEYWORDS,
         "flags": {"groups": True, "broadcasts": True},
-        "pin": [],
-    },
-    "Work": {
-        "keywords": ["work", "team", "project", "office", "meeting", "standup",
-                      "sprint", "jira", "task", "deadline"],
-        "flags": {"groups": True},
-        "pin": [],
-    },
-    "Channels": {
-        "keywords": [],
-        "flags": {"broadcasts": True},
-        "auto_type": "channel",
-        "pin": [],
-    },
-    "Bots": {
-        "keywords": [],
-        "flags": {"bots": True},
-        "auto_type": "bot",
-        "pin": [],
-    },
-    "Groups": {
-        "keywords": [],
-        "flags": {"groups": True},
-        "auto_type": "group",
-        "exclude_in": ["Research", "Work"],
-        "pin": [],
-    },
-    "Personal": {
-        "keywords": [],
-        "flags": {"contacts": True, "non_contacts": True},
-        "auto_type": "private",
-        "exclude_in": ["Research", "Work", "Bots"],
-        "pin": [],
     },
 }
+
+ARCHIVE_AFTER_DAYS = 180
+
+# Short keywords that need word-boundary matching to avoid false positives
+_SHORT_KEYWORDS = {"ai", "ml", "dl", "nlp", "cv", "rl", "llm", "rlhf"}
+
+
+def _keyword_match(title: str, keywords: list[str]) -> bool:
+    """Match keywords against title. Short keywords use word boundaries."""
+    title_lower = title.lower()
+    for kw in keywords:
+        if kw in _SHORT_KEYWORDS:
+            if re.search(rf'\b{re.escape(kw)}\b', title_lower):
+                return True
+        else:
+            if kw in title_lower:
+                return True
+    return False
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -228,80 +225,70 @@ def print_audit(data: dict):
 def load_folder_config(path: str | None) -> dict:
     if path:
         with open(path) as f:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f) or {}
     return DEFAULT_FOLDERS
 
 
 def plan_changes(data: dict, folder_config: dict) -> list[dict]:
-    """Generate a list of changes to apply."""
+    """Generate a list of changes to apply.
+
+    Strategy: create or update folders from config using exclusive priority-based
+    assignment (YAML order = priority), and archive dead chats.
+    """
     chats = data["chats"]
     existing = {f["title"]: f for f in data["folders"] if not f.get("builtin")}
     changes = []
-
-    # Build assignment: which chats go to which folder
-    assignments = defaultdict(list)  # folder_name -> [chat]
-    assigned_ids = set()
-
-    # Pass 1: keyword matching (highest priority)
-    for fname, fconf in folder_config.items():
-        keywords = [k.lower() for k in fconf.get("keywords", [])]
-        if not keywords:
-            continue
-        for c in chats:
-            if c["id"] in assigned_ids or c["archived"]:
-                continue
-            title_lower = c["title"].lower()
-            if any(kw in title_lower for kw in keywords):
-                assignments[fname].append(c)
-                assigned_ids.add(c["id"])
-
-    # Pass 2: type-based matching
-    for fname, fconf in folder_config.items():
-        auto_type = fconf.get("auto_type")
-        if not auto_type:
-            continue
-        exclude_in = set(fconf.get("exclude_in", []))
-        already_in_excluded = set()
-        for ex_folder in exclude_in:
-            already_in_excluded.update(c["id"] for c in assignments.get(ex_folder, []))
-
-        for c in chats:
-            if c["id"] in assigned_ids or c["archived"]:
-                continue
-            if c["id"] in already_in_excluded:
-                continue
-            if c["type"] == auto_type:
-                assignments[fname].append(c)
-                assigned_ids.add(c["id"])
-            elif auto_type == "group" and c["type"] == "supergroup":
-                assignments[fname].append(c)
-                assigned_ids.add(c["id"])
-
-    # Generate folder create/update changes
     next_id = max((f["id"] for f in data["folders"] if not f.get("builtin")), default=1) + 1
+
+    # Build pool of fresh (non-archived, active within ARCHIVE_AFTER_DAYS) chats
+    pool = {c["id"]: c for c in chats
+            if not c["archived"] and c["days_inactive"] <= ARCHIVE_AFTER_DAYS}
+
     for fname, fconf in folder_config.items():
-        folder_chats = assignments.get(fname, [])
+        # Determine action and ID: update existing folder or create new one
         if fname in existing:
-            changes.append({
-                "action": "update_folder",
-                "name": fname,
-                "id": existing[fname]["id"],
-                "chats": folder_chats,
-                "flags": fconf.get("flags", {}),
-            })
+            action = "update_folder"
+            folder_id = existing[fname]["id"]
         else:
-            changes.append({
-                "action": "create_folder",
-                "name": fname,
-                "id": next_id,
-                "chats": folder_chats,
-                "flags": fconf.get("flags", {}),
-            })
+            action = "create_folder"
+            folder_id = next_id
             next_id += 1
 
-    # Archive dead chats (>180 days inactive, not pinned, not already archived)
+        # Keyword-match against the remaining pool (exclusive assignment)
+        keywords = [k.lower() for k in fconf.get("keywords", [])]
+        matched = []
+        skip_types = set(fconf.get("skip_types", ["private", "bot"]))
+        for c in list(pool.values()):
+            if c["type"] in skip_types:
+                continue
+            if _keyword_match(c["title"], keywords):
+                matched.append(c)
+
+        # catch_types: also grab all remaining chats of these types (e.g. ["channel"])
+        catch_types = fconf.get("catch_types", [])
+        if catch_types:
+            for c in list(pool.values()):
+                if c["type"] in catch_types and c not in matched:
+                    matched.append(c)
+
+        # Remove matched chats from pool so they can't appear in later folders
+        for c in matched:
+            pool.pop(c["id"], None)
+
+        changes.append({
+            "action": action,
+            "name": fname,
+            "id": folder_id,
+            "chats": matched,
+            "emoticon": fconf.get("emoticon"),
+            "color": fconf.get("color"),
+        })
+
+
+    # Archive dead chats (>ARCHIVE_AFTER_DAYS inactive, not pinned, not already archived)
     dead = [c for c in chats
-            if c["days_inactive"] > 180 and not c["pinned"] and not c["archived"]]
+            if c["days_inactive"] > ARCHIVE_AFTER_DAYS
+            and not c["pinned"] and not c["archived"]]
     if dead:
         changes.append({
             "action": "archive",
@@ -320,9 +307,6 @@ def print_plan(changes: list[dict]):
         if ch["action"] in ("create_folder", "update_folder"):
             verb = "CREATE" if ch["action"] == "create_folder" else "UPDATE"
             print(f"\n  [{verb}] Folder: {ch['name']} (id={ch['id']})")
-            flags = [k for k, v in ch.get("flags", {}).items() if v]
-            if flags:
-                print(f"    Auto-include: {', '.join(flags)}")
             if ch["chats"]:
                 print(f"    Explicitly include ({len(ch['chats'])} chats):")
                 for c in ch["chats"][:15]:
@@ -330,7 +314,7 @@ def print_plan(changes: list[dict]):
                 if len(ch["chats"]) > 15:
                     print(f"      ... +{len(ch['chats']) - 15} more")
             else:
-                print("    (flag-based only, no explicit chats)")
+                print("    (no chats matched keywords)")
 
         elif ch["action"] == "archive":
             print(f"\n  [ARCHIVE] {len(ch['chats'])} dead chats (>180 days inactive):")
@@ -347,61 +331,122 @@ def print_plan(changes: list[dict]):
 async def apply_changes(client: TelegramClient, changes: list[dict]):
     for ch in changes:
         if ch["action"] in ("create_folder", "update_folder"):
+            title = ch["name"]
+
+            # Only include peers with valid access hashes
             include_peers = []
-            pinned_peers = []
             for c in ch.get("chats", []):
-                ip = to_input_peer(c["entity"])
+                entity = c["entity"]
+                ah = getattr(entity, "access_hash", None)
+                if ah is None or ah == 0:
+                    continue
+                ip = to_input_peer(entity)
                 if ip:
                     include_peers.append(ip)
 
-            flags = ch.get("flags", {})
-            title = ch["name"]
-
-            # Build title as TextWithEntities for newer Telegram API
-            try:
-                title_obj = types.TextWithEntities(text=title, entities=[])
-            except Exception:
-                title_obj = title
-
-            dialog_filter = DialogFilter(
-                id=ch["id"],
-                title=title_obj,
-                pinned_peers=pinned_peers,
-                include_peers=include_peers,
-                exclude_peers=[],
-                contacts=flags.get("contacts", False),
-                non_contacts=flags.get("non_contacts", False),
-                groups=flags.get("groups", False),
-                broadcasts=flags.get("broadcasts", False),
-                bots=flags.get("bots", False),
-                exclude_muted=False,
-                exclude_read=False,
-                exclude_archived=True,
-            )
-
             verb = "Creating" if ch["action"] == "create_folder" else "Updating"
-            log.info(f"{verb} folder: {title} (id={ch['id']})")
-            await client(functions.messages.UpdateDialogFilterRequest(
-                id=ch["id"],
-                filter=dialog_filter,
-            ))
+            log.info(f"{verb} folder: {title} (id={ch['id']}, {len(include_peers)} peers)")
+
+            # Validate peers by trying with all, then falling back to empty + flags only
+            async def _try_create(peers):
+                f = DialogFilter(
+                    id=ch["id"],
+                    title=types.TextWithEntities(text=title, entities=[]),
+                    pinned_peers=[],
+                    include_peers=peers,
+                    exclude_peers=[],
+                    contacts=False,
+                    non_contacts=False,
+                    groups=False,
+                    broadcasts=False,
+                    bots=False,
+                    exclude_muted=False,
+                    exclude_read=False,
+                    exclude_archived=True,
+                    emoticon=ch.get("emoticon"),
+                    color=ch.get("color"),
+                )
+                await client(functions.messages.UpdateDialogFilterRequest(
+                    id=ch["id"], filter=f))
+
+            try:
+                await _try_create(include_peers)
+            except Exception as e:
+                if "CHATLIST_INCLUDE_INVALID" in str(e) or "CHAT_ID_INVALID" in str(e):
+                    # Binary-split to find valid subset
+                    log.warning(f"  Bulk include failed ({e}), binary-split validating...")
+
+                    async def _find_valid(peers):
+                        if not peers:
+                            return []
+                        try:
+                            await _try_create(peers)
+                            return peers  # all valid
+                        except Exception:
+                            if len(peers) == 1:
+                                log.warning(f"  Skipping invalid peer: {peers[0]}")
+                                return []
+                            mid = len(peers) // 2
+                            left = await _find_valid(peers[:mid])
+                            right = await _find_valid(peers[mid:])
+                            return left + right
+
+                    valid_peers = await _find_valid(include_peers)
+                    if valid_peers:
+                        await _try_create(valid_peers)
+                    else:
+                        # Create folder with flags only, no explicit peers
+                        await _try_create([])
+                    log.info(f"  Valid peers: {len(valid_peers)}/{len(include_peers)}")
+                else:
+                    raise
 
         elif ch["action"] == "archive":
-            log.info(f"Archiving {len(ch['chats'])} dead chats")
-            for c in ch["chats"]:
+            total = len(ch["chats"])
+            log.info(f"Archiving {total} dead chats...")
+            ok, fail = 0, 0
+            for i, c in enumerate(ch["chats"]):
                 try:
                     await client.edit_folder(c["entity"], 1)
+                    ok += 1
                 except Exception as e:
-                    log.warning(f"  Failed to archive {c['title']}: {e}")
+                    fail += 1
+                    wait = getattr(e, "seconds", 0)
+                    if wait:
+                        log.warning(f"  Flood wait {wait}s at {i}/{total}")
+                        await asyncio.sleep(wait + 2)
+                        try:
+                            await client.edit_folder(c["entity"], 1)
+                            ok += 1
+                            fail -= 1
+                        except Exception:
+                            pass
+                    else:
+                        log.warning(f"  [{i}/{total}] Failed: {c['title']}: {e}")
+                # Pace requests: 0.5s between each, extra pause every 50
+                if (i + 1) % 50 == 0:
+                    log.info(f"  Progress: {i+1}/{total} (ok={ok}, fail={fail})")
+                    await asyncio.sleep(10)
+                else:
+                    await asyncio.sleep(0.5)
+            log.info(f"Archived: {ok} ok, {fail} failed out of {total}")
 
-    # Reorder folders
-    folder_ids = [ch["id"] for ch in changes
-                  if ch["action"] in ("create_folder", "update_folder")]
-    if folder_ids:
+    # Reorder folders — must include ALL folder IDs, not just new ones
+    new_ids = {ch["id"] for ch in changes
+               if ch["action"] in ("create_folder", "update_folder")}
+    if new_ids:
         try:
-            log.info(f"Setting folder order: {folder_ids}")
+            result = await client(functions.messages.GetDialogFiltersRequest())
+            all_filters = result.filters if hasattr(result, "filters") else result
+            all_ids = [f.id for f in all_filters
+                       if not isinstance(f, DialogFilterDefault)]
+            # Append any new IDs not yet in the list (just created)
+            for nid in sorted(new_ids):
+                if nid not in all_ids:
+                    all_ids.append(nid)
+            log.info(f"Setting folder order: {all_ids}")
             await client(functions.messages.UpdateDialogFiltersOrderRequest(
-                order=folder_ids,
+                order=all_ids,
             ))
         except Exception as e:
             log.warning(f"Folder reorder failed (non-critical): {e}")
@@ -414,8 +459,12 @@ async def apply_changes(client: TelegramClient, changes: list[dict]):
 async def main():
     parser = argparse.ArgumentParser(description="Telegram chat organizer")
     parser.add_argument("--plan", action="store_true", help="Show proposed changes")
+    parser.add_argument("--dump-fresh", action="store_true",
+                        help="Print all non-archived chats with days_inactive <= 180, grouped by type")
     parser.add_argument("--apply", action="store_true", help="Apply changes")
+    parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation")
     parser.add_argument("--config", type=str, help="YAML folder config file")
+    parser.add_argument("--skip-archive", action="store_true", help="Skip archiving, only create/update folders")
     args = parser.parse_args()
 
     client = TelegramClient(SESSION, API_ID, API_HASH)
@@ -425,17 +474,44 @@ async def main():
     data = await audit(client)
     print_audit(data)
 
+    if args.dump_fresh:
+        type_order = ["channel", "supergroup", "group", "private", "bot"]
+        fresh = [c for c in data["chats"] if not c["archived"] and c["days_inactive"] <= 180]
+        by_type = defaultdict(list)
+        for c in fresh:
+            by_type[c["type"]].append(c)
+        for t in type_order:
+            group = by_type.get(t)
+            if not group:
+                continue
+            print(f"\n── {t} ──")
+            for c in sorted(group, key=lambda x: x["title"].lower()):
+                print(f"  {c['type']:12s}  {c['days_inactive']:>4}d  {c['title']}")
+        # Print any types not in the predefined order
+        for t, group in sorted(by_type.items()):
+            if t not in type_order:
+                print(f"\n── {t} ──")
+                for c in sorted(group, key=lambda x: x["title"].lower()):
+                    print(f"  {c['type']:12s}  {c['days_inactive']:>4}d  {c['title']}")
+        await client.disconnect()
+        sys.exit(0)
+
     if args.plan or args.apply:
         folder_config = load_folder_config(args.config)
         changes = plan_changes(data, folder_config)
+        if args.skip_archive:
+            changes = [c for c in changes if c["action"] != "archive"]
         print_plan(changes)
 
         if args.apply:
-            answer = input("\nApply these changes? [y/N] ")
-            if answer.strip().lower() == "y":
+            if args.yes:
                 await apply_changes(client, changes)
             else:
-                print("Aborted.")
+                answer = input("\nApply these changes? [y/N] ")
+                if answer.strip().lower() == "y":
+                    await apply_changes(client, changes)
+                else:
+                    print("Aborted.")
 
     await client.disconnect()
 

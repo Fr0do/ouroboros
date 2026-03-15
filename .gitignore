@@ -7,3 +7,9 @@ notion_pages.json
 .disk_state.json
 bot.log
 *.session
+*.session-journal
+
+# Telegram organizer — personal configs and one-off migration scripts
+scripts/folders.yaml
+scripts/tg-folder-cleanup.py
+scripts/tg-folder-migrate.py
